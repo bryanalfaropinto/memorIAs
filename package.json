@@ -11,6 +11,7 @@
   "dependencies": {
     "@expo/ngrok": "^4.1.0",
     "@expo/webpack-config": "^18.0.1",
+    "@react-navigation/bottom-tabs": "^6.5.7",
     "expo": "^48.0.0",
     "expo-av": "~13.2.1",
     "expo-file-system": "~15.2.2",
