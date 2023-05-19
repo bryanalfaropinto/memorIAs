@@ -1,22 +1,85 @@
-import React, { useState, useContext } from "react";
-import { StyleSheet, View, Button, Modal, TextInput } from "react-native";
+import React, { useState, useContext, useEffect, useRef } from "react";
+import {
+  StyleSheet,
+  View,
+  Button,
+  Modal,
+  TextInput,
+  Dimensions,
+} from "react-native";
 import { Audio } from "expo-av";
 import * as FileSystem from "expo-file-system";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 
 import AppContext from "./AppContext";
 
 const RecordAudio = () => {
+  const [isRecording, setIsRecording] = useState(false);
   const [recording, setRecording] = useState();
   const [fileUri, setFileUri] = useState();
   const [modalVisible, setModalVisible] = useState(false);
   const [recordingTitle, setRecordingTitle] = useState("");
-
   const { audioFolder, setAudioAdded } = useContext(AppContext);
-  //console.log("audioFolder en RecordAudio.js: ", audioFolder);
+  const [windowWidth, setWindowWidth] = useState(
+    Dimensions.get("window").width
+  );
+  const [animationValue, setAnimationValue] = useState(useSharedValue(0));
 
   const navigation = useNavigation();
+
+  const meterIntervalRef = useRef(null);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      width: `${animationValue.value * 100}%`,
+    };
+  });
+
+  useEffect(() => {
+    const updateWindowWidth = () => {
+      setWindowWidth(Dimensions.get("window").width);
+    };
+
+    Dimensions.addEventListener("change", updateWindowWidth);
+
+    return () => {
+      Dimensions.removeEventListener("change", updateWindowWidth);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isRecording) {
+      startMetering();
+    } else {
+      stopMetering();
+    }
+  }, [isRecording]);
+
+  const startMetering = () => {
+    if (recording) {
+      meterIntervalRef.current = setInterval(async () => {
+        const { isRecording, metering } = await recording.getStatusAsync();
+        //console.log("Metering: ", metering, " --- isRecording: ", isRecording);
+        if (isRecording) {
+          const intensity = metering || 0;
+          //console.log("Intensity: ", intensity);
+          setAnimationValue(intensity);
+        }
+      }, 100);
+    }
+  };
+
+  const stopMetering = () => {
+    if (meterIntervalRef.current) {
+      clearInterval(meterIntervalRef.current);
+      meterIntervalRef.current = null;
+    }
+  };
 
   async function startRecording() {
     try {
@@ -33,6 +96,7 @@ const RecordAudio = () => {
       );
       await recording.startAsync();
       setRecording(recording);
+      setIsRecording(true);
       //console.log("Recording started");
     } catch (err) {
       console.error("Failed to start recording", err);
@@ -50,6 +114,7 @@ const RecordAudio = () => {
     setFileUri(fileInfo.uri);
     //console.log("File path:", fileInfo.uri);
 
+    setIsRecording(false);
     setModalVisible(true);
   }
 
@@ -66,13 +131,16 @@ const RecordAudio = () => {
       console.log("Error occurred while saving sound: ", error);
     }
 
-    setAudioAdded(true);
     setModalVisible(false);
-    navigation.navigate("Audios List"); // Navega al componente AudioList
+    setAudioAdded(true);
+    navigation.navigate("AudioList"); // Navega al componente AudioList
   }
 
   return (
     <View style={styles.container}>
+      <View style={styles.recordingContainer}>
+        <Animated.View style={[styles.animationBar, animatedStyle]} />
+      </View>
       <View style={styles.buttonContainer}>
         <Icon
           name={recording ? "stop" : "mic"}
@@ -131,5 +199,15 @@ const styles = StyleSheet.create({
     margin: 10,
     padding: 10,
     width: "80%",
+  },
+  recordingContainer: {
+    height: 100, // Ajusta la altura según tus necesidades
+    backgroundColor: "black",
+    justifyContent: "flex-end",
+  },
+  animationBar: {
+    height: 10,
+    backgroundColor: "red",
+    marginTop: 20,
   },
 });
