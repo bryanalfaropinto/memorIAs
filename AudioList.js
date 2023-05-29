@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from "uuid";
 import AppContext from "./AppContext";
 
 const AudioList = () => {
+
   const { audioFolder, audioList, audioAdded, setAudioList, setAudioAdded } =
     useContext(AppContext);
   //console.log("audioFolder en AudioList.js: ", audioFolder);
@@ -162,8 +163,8 @@ const AudioList = () => {
   return (
     <View style={styles.container}>
       {audioList.length > 0 &&
-      audioMetadata &&
-      Object.keys(audioMetadata).length > 0 ? (
+        audioMetadata &&
+        Object.keys(audioMetadata).length > 0 ? (
         <FlatList
           data={Object.values(audioMetadata)} // Utilizar Object.values para obtener un array de los valores de audioMetadata
           keyExtractor={(item, index) => item.key.toString()} // Utilizar item.key como key
@@ -216,7 +217,7 @@ const AudioList = () => {
           }
         />
       ) : (
-        <Text>No hay audios grabados</Text>
+        <Text>No audios created</Text>
       )}
     </View>
   );
@@ -226,6 +227,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 10,
+    backgroundColor: "#fcf6db",
   },
   row: {
     flexDirection: "row",

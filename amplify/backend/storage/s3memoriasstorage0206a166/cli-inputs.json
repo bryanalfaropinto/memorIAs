@@ -1,0 +1,20 @@
+{
+  "resourceName": "s3memoriasstorage0206a166",
+  "bucketName": "memorias-storage-0206a166",
+  "policyUUID": "c0362577",
+  "storageAccess": "auth",
+  "guestAccess": [],
+  "authAccess": [
+    "CREATE_AND_UPDATE",
+    "READ",
+    "DELETE"
+  ],
+  "triggerFunction": "S3Triggerad394d6f",
+  "groupAccess": {
+    "memoriasUserPoolGroup": [
+      "CREATE_AND_UPDATE",
+      "READ",
+      "DELETE"
+    ]
+  }
+}

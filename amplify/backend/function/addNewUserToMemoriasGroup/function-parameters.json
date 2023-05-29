@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "auth": {
+      "memorias9eb74f30": [
+        "create",
+        "read",
+        "update",
+        "delete"
+      ]
+    }
+  },
+  "lambdaLayers": [],
+  "environmentVariableList": [
+    {
+      "cloudFormationParameterName": "targetGroup",
+      "environmentVariableName": "TARGET_GROUP"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+type AppUser @model @auth(rules: [{allow: public}, {allow: private}]) {
+  id: ID!
+  cognitoId: ID
+  name: String
+  birthday: AWSDate
+  Audio: [Audio] @hasMany(indexName: "byAppUser", fields: ["id"])
+  photo: AWSURL
+}
+
+type Audio @model @auth(rules: [{allow: public}, {allow: private}]) {
+  id: ID!
+  title: String
+  s3UrlPath: AWSURL
+  expoFileSytemPath: String
+  metadata: AWSJSON
+  appuserID: ID! @index(name: "byAppUser")
+  AppUser: AppUser @belongsTo(fields: ["appuserID"])
+} 

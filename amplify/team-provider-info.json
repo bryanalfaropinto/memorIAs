@@ -13,7 +13,25 @@
     },
     "categories": {
       "auth": {
-        "memorias9eb74f30": {}
+        "memorias9eb74f30": {},
+        "userPoolGroups": {}
+      },
+      "storage": {
+        "s3memoriasstorage0206a166": {}
+      },
+      "function": {
+        "S3Triggerad394d6f": {
+          "deploymentBucketName": "amplify-memorias-dev-03328-deployment",
+          "s3Key": "amplify-builds/S3Triggerad394d6f-58384d74527961744a33-build.zip"
+        },
+        "addNewUserToMemoriasGroup": {
+          "deploymentBucketName": "amplify-memorias-dev-03328-deployment",
+          "s3Key": "amplify-builds/addNewUserToMemoriasGroup-6666575876495a49334c-build.zip",
+          "targetGroup": "memoriasUserPoolGroup"
+        }
+      },
+      "api": {
+        "memorIAs": {}
       }
     }
   }

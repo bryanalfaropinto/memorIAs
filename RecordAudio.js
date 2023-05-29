@@ -1,73 +1,80 @@
-import React, { useState, useContext, useEffect, useRef } from "react";
+import React, { useState, useContext, useRef } from "react";
 import {
   StyleSheet,
   View,
   Button,
   Modal,
   TextInput,
-  Dimensions,
+  // Dimensions,
 } from "react-native";
 import { Audio } from "expo-av";
 import * as FileSystem from "expo-file-system";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
+  //   useSharedValue,
+  //   useAnimatedStyle,
+  interpolate,
 } from "react-native-reanimated";
 
 import AppContext from "./AppContext";
 
 const RecordAudio = () => {
+  const { audioFolder, setAudioAdded } = useContext(AppContext);
+
   const [isRecording, setIsRecording] = useState(false);
   const [recording, setRecording] = useState();
   const [fileUri, setFileUri] = useState();
   const [modalVisible, setModalVisible] = useState(false);
   const [recordingTitle, setRecordingTitle] = useState("");
-  const { audioFolder, setAudioAdded } = useContext(AppContext);
-  const [windowWidth, setWindowWidth] = useState(
-    Dimensions.get("window").width
-  );
-  const [animationValue, setAnimationValue] = useState(useSharedValue(0));
+  // const [windowWidth, setWindowWidth] = useState(
+  //   Dimensions.get("window").width
+  // );
+  // const [animationValue, setAnimationValue] = useState(useSharedValue(0));
 
   const navigation = useNavigation();
 
   const meterIntervalRef = useRef(null);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      width: `${animationValue.value * 100}%`,
-    };
-  });
+  // const animatedStyle = useAnimatedStyle(() => {
+  //   return {
+  //     width: `${animationValue.value * 100}%`,
+  //   };
+  // });
 
-  useEffect(() => {
-    const updateWindowWidth = () => {
-      setWindowWidth(Dimensions.get("window").width);
-    };
+  // useEffect(() => {
+  //   const updateWindowWidth = () => {
+  //     setWindowWidth(Dimensions.get("window").width);
+  //   };
 
-    Dimensions.addEventListener("change", updateWindowWidth);
+  //   Dimensions.addEventListener("change", updateWindowWidth);
 
-    return () => {
-      Dimensions.removeEventListener("change", updateWindowWidth);
-    };
-  }, []);
+  //   return () => {
+  //     Dimensions.removeEventListener("change", updateWindowWidth);
+  //   };
+  // }, []);
 
-  useEffect(() => {
-    if (isRecording) {
-      startMetering();
-    } else {
-      stopMetering();
-    }
-  }, [isRecording]);
+  // useEffect(() => {
+  //   if (isRecording) {
+  //     startMetering();
+  //   } else {
+  //     stopMetering();
+  //   }
+  // }, [isRecording]);
 
   const startMetering = () => {
     if (recording) {
       meterIntervalRef.current = setInterval(async () => {
         const { isRecording, metering } = await recording.getStatusAsync();
-        //console.log("Metering: ", metering, " --- isRecording: ", isRecording);
+        console.log("Metering: ", metering, " --- isRecording: ", isRecording);
         if (isRecording) {
-          const intensity = metering || 0;
-          //console.log("Intensity: ", intensity);
+          const intensity = interpolate(
+            metering,
+            [-160, 0],
+            [0, 1],
+            Animated.Extrapolate.CLAMP
+          );
+          console.log("Intensity: ", intensity);
           setAnimationValue(intensity);
         }
       }, 100);
@@ -136,11 +143,12 @@ const RecordAudio = () => {
     navigation.navigate("AudioList"); // Navega al componente AudioList
   }
 
+  /* <View style={styles.recordingContainer}>
+        <Animated.View style={[styles.animationBar, animatedStyle]} />
+      </View> */
+
   return (
     <View style={styles.container}>
-      <View style={styles.recordingContainer}>
-        <Animated.View style={[styles.animationBar, animatedStyle]} />
-      </View>
       <View style={styles.buttonContainer}>
         <Icon
           name={recording ? "stop" : "mic"}
@@ -175,7 +183,7 @@ export default RecordAudio;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#fcf6db",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -201,7 +209,7 @@ const styles = StyleSheet.create({
     width: "80%",
   },
   recordingContainer: {
-    height: 100, // Ajusta la altura según tus necesidades
+    height: 100,
     backgroundColor: "black",
     justifyContent: "flex-end",
   },

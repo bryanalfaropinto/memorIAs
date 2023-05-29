@@ -1,4 +1,41 @@
 {
+  "api": {
+    "memorIAs": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "UserPoolId"
+          ],
+          "category": "auth",
+          "resourceName": "memorias9eb74f30"
+        }
+      ],
+      "output": {
+        "authConfig": {
+          "additionalAuthenticationProviders": [
+            {
+              "authenticationType": "AWS_IAM"
+            },
+            {
+              "authenticationType": "AMAZON_COGNITO_USER_POOLS",
+              "userPoolConfig": {
+                "userPoolId": "authmemorias9eb74f30"
+              }
+            }
+          ],
+          "defaultAuthentication": {
+            "apiKeyConfig": {
+              "apiKeyExpirationDays": 30,
+              "description": "api key description"
+            },
+            "authenticationType": "API_KEY"
+          }
+        }
+      },
+      "providerPlugin": "awscloudformation",
+      "service": "AppSync"
+    }
+  },
   "auth": {
     "memorias9eb74f30": {
       "customAuth": false,
@@ -27,6 +64,116 @@
       },
       "providerPlugin": "awscloudformation",
       "service": "Cognito"
+    },
+    "userPoolGroups": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "UserPoolId",
+            "AppClientIDWeb",
+            "AppClientID",
+            "IdentityPoolId"
+          ],
+          "category": "auth",
+          "resourceName": "memorias9eb74f30"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Cognito-UserPool-Groups"
+    }
+  },
+  "function": {
+    "S3Triggerad394d6f": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "addNewUserToMemoriasGroup": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "UserPoolId"
+          ],
+          "category": "auth",
+          "resourceName": "memorias9eb74f30"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    }
+  },
+  "parameters": {
+    "AMPLIFY_function_S3Triggerad394d6f_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "S3Triggerad394d6f"
+        }
+      ]
+    },
+    "AMPLIFY_function_S3Triggerad394d6f_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "S3Triggerad394d6f"
+        }
+      ]
+    },
+    "AMPLIFY_function_addNewUserToMemoriasGroup_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "addNewUserToMemoriasGroup"
+        }
+      ]
+    },
+    "AMPLIFY_function_addNewUserToMemoriasGroup_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "addNewUserToMemoriasGroup"
+        }
+      ]
+    },
+    "AMPLIFY_function_addNewUserToMemoriasGroup_targetGroup": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "addNewUserToMemoriasGroup"
+        }
+      ]
+    }
+  },
+  "storage": {
+    "s3memoriasstorage0206a166": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn",
+            "LambdaExecutionRole"
+          ],
+          "category": "function",
+          "resourceName": "S3Triggerad394d6f"
+        },
+        {
+          "attributes": [
+            "UserPoolId"
+          ],
+          "category": "auth",
+          "resourceName": "memorias9eb74f30"
+        },
+        {
+          "attributes": [
+            "memoriasUserPoolGroupGroupRole"
+          ],
+          "category": "auth",
+          "resourceName": "userPoolGroups"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "S3"
     }
   }
 }

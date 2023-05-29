@@ -1,44 +1,28 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useContext } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import * as FileSystem from "expo-file-system";
 import { View, StyleSheet } from "react-native";
 
-import AppContext from "./AppContext";
 import RecordAudio from "./RecordAudio";
 import AudioList from "./AudioList";
 import CustomHeader from "./CustomHeader";
+import AppContext from "./AppContext";
+import AppUserForm from "./AppUserForm"
 
 const Tab = createBottomTabNavigator();
 
 const EntryPage = () => {
 
-  const [audioFolder, setAudioFolder] = useState(
-    FileSystem.documentDirectory + "memorIAs/"
-  );
-  const [audioAdded, setAudioAdded] = useState(false);
-  const [audioList, setAudioList] = useState([]);
-
-  const createAppFolder = async () => {
-    try {
-      const folderInfo = await FileSystem.getInfoAsync(audioFolder);
-      //console.log('audioFolder => ', audioFolder, ' --- Folder Info - useEffect: ', folderInfo);
-
-      if (!folderInfo.exists) {
-        await FileSystem.makeDirectoryAsync(audioFolder);
-      }
-    } catch (err) {
-      console.error("Error creating app folder: ", err);
-    }
-  };
+  const { audioFolder, isInitialRegistration, setAudioList } = useContext(AppContext);
 
   const loadAudioList = async () => {
     try {
       const dirInfo = await FileSystem.getInfoAsync(audioFolder);
-      console.log("Folder Info loadAudioList: ", dirInfo);
+      //console.log("Folder Info loadAudioList: ", dirInfo);
       if (dirInfo.exists && dirInfo.isDirectory) {
         const files = await FileSystem.readDirectoryAsync(audioFolder);
-        console.log("Files in audioFolder: ", files);
+        //console.log("Files in audioFolder: ", files);
         setAudioList(files);
       }
     } catch (error) {
@@ -49,60 +33,71 @@ const EntryPage = () => {
     }
   };
 
-  const fetchAudioList = async () => {
-    await createAppFolder();
-    await loadAudioList();
-  };
-
   useEffect(() => {
-    fetchAudioList();
+    loadAudioList();
   }, []);
 
+  if (isInitialRegistration) {
+    return (
+      <View style={styles.mainContainer}>
+        <CustomHeader />
+        <View style={styles.content}>
+          <AppUserForm />
+        </View>
+      </View>
+    );
+  }
+
   return (
-    <AppContext.Provider
-      value={{
-        audioFolder,
-        audioList,
-        audioAdded,
-        setAudioFolder,
-        setAudioList,
-        setAudioAdded,
-      }}
-    >
+    <View style={styles.mainContainer}>
       <CustomHeader />
-      <Tab.Navigator screenOptions={{ headerShown: false }}>
-        <Tab.Screen
-          name="RecordAudio"
-          component={RecordAudio}
-          options={{
-            tabBarLabel: "Record Audio",
-            tabBarIcon: ({ color, size }) => (
-              <View style={styles.iconContainer}>
-                <MaterialIcons name="mic" color={color} size={size} />
-              </View>
-            ),
-          }}
-        />
-        <Tab.Screen
-          name="AudioList"
-          component={AudioList}
-          options={{
-            tabBarLabel: "Audios List",
-            tabBarIcon: ({ color, size }) => (
-              <View style={styles.iconContainer}>
-                <MaterialIcons name="audiotrack" color={color} size={size} />
-              </View>
-            ),
-          }}
-        />
-      </Tab.Navigator>
-    </AppContext.Provider>
+      <View style={styles.content}>
+        <Tab.Navigator screenOptions={{ headerShown: false, tabBarStyle: styles.tabBar }}>
+          <Tab.Screen
+            name="RecordAudio"
+            component={RecordAudio}
+            options={{
+              tabBarLabel: "Record Audio",
+              tabBarIcon: ({ color, size }) => (
+                <View style={styles.iconContainer}>
+                  <MaterialIcons name="mic" color={"#000000"} size={size} />
+                </View>
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="AudioList"
+            component={AudioList}
+            options={{
+              tabBarLabel: "Audios List",
+              tabBarIcon: ({ color, size }) => (
+                <View style={styles.iconContainer}>
+                  <MaterialIcons name="audiotrack" color={"#000000"} size={size} />
+                </View>
+              ),
+            }}
+          />
+        </Tab.Navigator>
+      </View>
+    </View>
   );
 };
 
 export default EntryPage;
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  tabBar: {
+    backgroundColor: "#a9c32a",
+    borderTopColor: "transparent",
+    elevation: 0,
+  },
   iconContainer: {
     justifyContent: "center",
     alignItems: "center",
