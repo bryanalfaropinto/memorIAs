@@ -3,7 +3,8 @@ import { NavigationContainer } from "@react-navigation/native";
 import { Provider as PaperProvider } from "react-native-paper";
 import { createStackNavigator } from "@react-navigation/stack";
 import EntryPage from "./EntryPage";
-import Home from "./Home";
+import MyProfile from "./profile/MyProfile";
+import Home from "./auth/Home";
 
 const Stack = createStackNavigator();
 
@@ -20,6 +21,11 @@ const Navigation = () => {
           <Stack.Screen
             name="Entry"
             component={EntryPage}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="MyProfile"
+            component={MyProfile}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>

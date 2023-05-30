@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import Navigation from "./Navigation";
+import Navigation from "./pages/Navigation";
 import * as FileSystem from "expo-file-system";
-import AppContext from "./AppContext";
+import AppContext from "./pages/AppContext";
 import "@azure/core-asynciterator-polyfill";
 
 const App = () => {

@@ -17,7 +17,7 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 
-import AppContext from "./AppContext";
+import AppContext from "../AppContext";
 
 const RecordAudio = () => {
   const { audioFolder, setAudioAdded } = useContext(AppContext);

@@ -13,7 +13,7 @@ import { Audio } from "expo-av";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import { v4 as uuidv4 } from "uuid";
 
-import AppContext from "./AppContext";
+import AppContext from "../AppContext";
 
 const AudioList = () => {
 

@@ -12,10 +12,10 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import * as WebBrowser from "expo-web-browser";
 import { DataStore } from "@aws-amplify/datastore";
-import { AppUser } from "./src/models";
+import { AppUser } from "../../src/models";
 
-import awsmobile from "./src/aws-exports";
-import AppContext from "./AppContext";
+import awsmobile from "../../src/aws-exports";
+import AppContext from "../AppContext";
 
 async function urlOpener(url, redirectUrl) {
   const { type, url: newUrl } = await WebBrowser.openAuthSessionAsync(
@@ -49,6 +49,8 @@ const Home = () => {
   const [verificationCode, setVerificationCode] = useState("");
   const [isWaitingConfirmation, setIsWaitingConfirmation] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isGoogleSignIn, setIsGoogleSignIn] = useState(false);
+  const [isCognitoSignIn, setIsCognitoSignIn] = useState(false);
 
   const { setIsInitialRegistration } = useContext(AppContext);
 
@@ -112,8 +114,10 @@ const Home = () => {
           setUserData(data);
           if (data.username.startsWith("google_")) {
             console.log("Google sign in");
+            setIsGoogleSignIn(true);
           } else {
             console.log("Cognito sign in");
+            setIsCognitoSignIn(true);
           }
           navigation.navigate("Entry");
           break;
@@ -189,8 +193,14 @@ const Home = () => {
   useEffect(() => {
     if (userData) {
       //console.log("userData Home: ", userData);
-      const cognitoId = userData.attributes.sub;
-      queryAppUserByCognitoId(cognitoId);
+      if (isCognitoSignIn) {
+        queryAppUserByCognitoId(userData.attributes.sub);
+      }
+      else {
+        if (isGoogleSignIn) {
+          queryAppUserByCognitoId(userData.signInUserSession.accessToken.payload.sub);
+        }
+      }
     }
   }, [userData]);
 
@@ -288,7 +298,7 @@ const Home = () => {
       {userData && <Text>{userData.username}</Text>}
 
       <Image
-        source={require("./assets/LogoMemorias.png")}
+        source={require("../../assets/LogoMemorias.png")}
         style={styles.logo}
       />
 
@@ -307,7 +317,7 @@ const Home = () => {
         onPress={handleGoogleSignIn}
       >
         <Image
-          source={require("./assets/icons8-google-96.png")}
+          source={require("../../assets/icons8-google-96.png")}
           style={styles.googleIcon}
         />
         <Text style={styles.googleLoginButtonText}>Continue with Google</Text>

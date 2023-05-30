@@ -2,9 +2,13 @@ import React, { useState } from "react";
 import { Appbar, Menu, IconButton } from "react-native-paper";
 import { Auth } from "aws-amplify";
 import { Image, StyleSheet, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 const CustomHeader = () => {
   const [isMenuVisible, setIsMenuVisible] = useState(false);
+
+  const navigation = useNavigation();
 
   const handleMenuToggle = () => {
     setIsMenuVisible(!isMenuVisible);
@@ -18,10 +22,17 @@ const CustomHeader = () => {
     }
   };
 
+  const handleMyProfile = () => {
+    navigation.navigate("MyProfile");
+  }
+
+  const iconColor = "black";
+  const iconSize = 20;
+
   return (
     <Appbar.Header style={styles.header}>
       <Image
-        source={require("./assets/LetrasMemorias.png")}
+        source={require("../assets/LetrasMemorias.png")}
         style={styles.logo}
       />
       <View style={styles.menuView}>
@@ -32,14 +43,25 @@ const CustomHeader = () => {
             <IconButton
               icon="dots-vertical"
               onPress={handleMenuToggle}
-              color="black"
+              color={iconColor}
             />
           }
         >
           <Menu.Item
+            onPress={handleMyProfile}
+            style={styles.menuItem}
+            title="My Profile"
+            leadingIcon={({ color, size }) => (
+              <Ionicons name="person-circle-outline" size={iconSize} color={iconColor} style={styles.icon} />
+            )}
+          />
+          <Menu.Item
             onPress={handleSignOut}
             style={styles.menuItem}
             title="Sign Out"
+            leadingIcon={({ color, size }) => (
+              <Ionicons name="exit-outline" size={iconSize} color={iconColor} style={styles.icon} />
+            )}
           />
         </Menu>
       </View>
@@ -62,7 +84,12 @@ const styles = StyleSheet.create({
   },
   menuItem: {
     backgroundColor: "white",
-    paddingHorizontal: 5,
+    paddingHorizontal: 2,
+    paddingVertical: 2,
+    marginRight: 1,
+  },
+  icon: {
+    marginRight: 2,
   },
 });
 

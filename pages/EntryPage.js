@@ -4,11 +4,11 @@ import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import * as FileSystem from "expo-file-system";
 import { View, StyleSheet } from "react-native";
 
-import RecordAudio from "./RecordAudio";
-import AudioList from "./AudioList";
+import RecordAudio from "./audio/RecordAudio";
+import AudioList from "./audio/AudioList";
 import CustomHeader from "./CustomHeader";
 import AppContext from "./AppContext";
-import AppUserForm from "./AppUserForm"
+import AppUserForm from "./profile/AppUserForm"
 
 const Tab = createBottomTabNavigator();
 
