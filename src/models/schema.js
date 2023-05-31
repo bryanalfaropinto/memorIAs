@@ -69,7 +69,7 @@ export const schema = {
                     "isRequired": false,
                     "attributes": [],
                     "isReadOnly": true
-                },
+                }
             },
             "syncable": true,
             "pluralName": "AppUsers",

@@ -18,6 +18,7 @@ import { Auth } from "aws-amplify";
 import { AppUser } from "../../src/models";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
+import CustomHeader from "../CustomHeader";
 
 const MyProfile = () => {
   const [dbUser, setDbUser] = useState(null);
@@ -32,29 +33,32 @@ const MyProfile = () => {
   const [isFullNameChanged, setIsFullNameChanged] = useState(false);
   const [isDateOfBirthChanged, setIsDateOfBirthChanged] = useState(false);
 
-  useEffect(async () => {
-    try {
-      //Identity from DB
-      const cognitoUser = await Auth.currentAuthenticatedUser();
-      const identityId = cognitoUser.getSignInUserSession().getIdToken()
-        .payload.sub;
-      setIdentityId(identityId);
-      //AppUser from DB
-      const user = await DataStore.query(AppUser, (user) =>
-        user.cognitoId("eq", identityId)
-      );
-      if (user[0]) {
-        setDbUser(user[0]);
-        setFullName(user[0].name);
-        setDateOfBirth(new Date(user[0].dateOfBirth));
-        setCreationDate(user[0].creationDate);
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        //Identity from DB
+        const cognitoUser = await Auth.currentAuthenticatedUser();
+        const identityId = cognitoUser.getSignInUserSession().getIdToken()
+          .payload.sub;
+        setIdentityId(identityId);
+        //AppUser from DB
+        const user = await DataStore.query(AppUser, (user) =>
+          user.cognitoId("eq", identityId)
+        );
+        if (user[0]) {
+          setDbUser(user[0]);
+          setFullName(user[0].name);
+          setDateOfBirth(new Date(user[0].dateOfBirth));
+          setCreationDate(user[0].creationDate);
+        }
+        //code to get image from s3 bucket
+        const response = await Storage.get(`profile-${identityId}.jpeg`);
+        setProfileImage(response);
+      } catch (error) {
+        console.log("Error when loading data from profile: ", error);
       }
-      //code to get image from s3 bucket
-      const response = await Storage.get(`profile-${identityId}.jpeg`);
-      setProfileImage(response);
-    } catch (error) {
-      console.log("Error when loading data from profile: ", error);
     }
+    fetchData();
   }, []);
 
   const handleDateChange = (event, selectedDate) => {
@@ -164,60 +168,70 @@ const MyProfile = () => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
-      <Text style={styles.welcomeText}>Hi ${fullName}!</Text>
-      {percentage !== 0 && <Text style={styles.percentage}>{percentage}%</Text>}
-      {profileImage ? (
-        <Image source={{ uri: profileImage.uri }} style={styles.profileImage} />
-      ) : (
-        <Text style={styles.profileImagePlaceholder}>Update image profile</Text>
-      )}
-      <TouchableOpacity style={styles.button} onPress={pickImageFromGallery}>
-        <Text style={styles.buttonText}>Update image</Text>
-      </TouchableOpacity>
-      <View style={styles.dateOfBirthContainer}>
-        <Ionicons
-          name="person-circle"
-          size={24}
-          color="black"
-          style={styles.icon}
-        />
-        <Text style={styles.dateOfBirthLabel}>Alias</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Preferred Name"
-          value={fullName}
-          onChangeText={(text) => {
-            setIsFullNameChanged(true);
-            setFullName(text);
-          }}
-        />
-      </View>
-      <TouchableWithoutFeedback onPress={showMode}>
+      <CustomHeader />
+      <View style={styles.content}>
+        <Text style={styles.welcomeText}>Hi ${fullName}!</Text>
+        {percentage !== 0 && (
+          <Text style={styles.percentage}>{percentage}%</Text>
+        )}
+        {profileImage ? (
+          <Image
+            source={{ uri: profileImage.uri }}
+            style={styles.profileImage}
+          />
+        ) : (
+          <Text style={styles.profileImagePlaceholder}>
+            Update image profile
+          </Text>
+        )}
+        <TouchableOpacity style={styles.button} onPress={pickImageFromGallery}>
+          <Text style={styles.buttonText}>Update image</Text>
+        </TouchableOpacity>
         <View style={styles.dateOfBirthContainer}>
           <Ionicons
-            name="calendar"
+            name="person-circle"
             size={24}
             color="black"
             style={styles.icon}
           />
-          <Text style={styles.dateOfBirthLabel}>Birthday</Text>
-          <Text style={styles.dateOfBirthText}>
-            {dateOfBirth.toLocaleDateString()}
-          </Text>
+          <Text style={styles.dateOfBirthLabel}>Alias</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Preferred Name"
+            value={fullName}
+            onChangeText={(text) => {
+              setIsFullNameChanged(true);
+              setFullName(text);
+            }}
+          />
         </View>
-      </TouchableWithoutFeedback>
-      {showDatePicker && (
-        <DateTimePicker
-          value={dateOfBirth}
-          mode="date"
-          display="default"
-          dateFormat="dayofweek day month"
-          onChange={handleDateChange}
-        />
-      )}
-      <TouchableOpacity style={styles.button} onPress={updateProfile}>
-        <Text style={styles.buttonText}>Update</Text>
-      </TouchableOpacity>
+        <TouchableWithoutFeedback onPress={showMode}>
+          <View style={styles.dateOfBirthContainer}>
+            <Ionicons
+              name="calendar"
+              size={24}
+              color="black"
+              style={styles.icon}
+            />
+            <Text style={styles.dateOfBirthLabel}>Birthday</Text>
+            <Text style={styles.dateOfBirthText}>
+              {dateOfBirth.toLocaleDateString()}
+            </Text>
+          </View>
+        </TouchableWithoutFeedback>
+        {showDatePicker && (
+          <DateTimePicker
+            value={dateOfBirth}
+            mode="date"
+            display="default"
+            dateFormat="dayofweek day month"
+            onChange={handleDateChange}
+          />
+        )}
+        <TouchableOpacity style={styles.button} onPress={updateProfile}>
+          <Text style={styles.buttonText}>Update</Text>
+        </TouchableOpacity>
+      </View>
     </KeyboardAvoidingView>
   );
 };
@@ -225,9 +239,6 @@ const MyProfile = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#fcf6db",
   },
   welcomeText: {
     fontSize: 24,
@@ -290,6 +301,12 @@ const styles = StyleSheet.create({
   icon: {
     marginRight: 5,
     marginBottom: 16,
+  },
+  content: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fcf6db",
   },
 });
 
