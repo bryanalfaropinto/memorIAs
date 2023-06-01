@@ -18,6 +18,7 @@ import { Auth } from "aws-amplify";
 import { AppUser } from "../../src/models";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
+import * as FileSystem from "expo-file-system";
 import CustomHeader from "../CustomHeader";
 
 const MyProfile = () => {
@@ -32,28 +33,74 @@ const MyProfile = () => {
   const [isProfileImageChanged, setIsProfileImageChanged] = useState(false);
   const [isFullNameChanged, setIsFullNameChanged] = useState(false);
   const [isDateOfBirthChanged, setIsDateOfBirthChanged] = useState(false);
+  const [downloadedImageUri, setDownloadedImageUri] = useState(null);
+
+  const getIdentityId = async () => {
+    const cognitoUser = await Auth.currentAuthenticatedUser();
+    const identityId = cognitoUser.getSignInUserSession().getIdToken()
+      .payload.sub;
+    //console.log("IdentityId from authenticated user: ", identityId);
+    return identityId;
+  };
+
+  const downloadProfileImage = async (preSignedUrl, fileName) => {
+    try {
+      //console.log("URI pre-signed: ", preSignedUrl);
+      const response = await fetch(preSignedUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "image/jpeg",
+        },
+      });
+      const fileUri = FileSystem.cacheDirectory + fileName;
+      const { uri } = await FileSystem.downloadAsync(response.url, fileUri);
+      setDownloadedImageUri(uri);
+    } catch (error) {
+      console.log("Error downloading image: ", error);
+    }
+  };
+
+  const queryUserByCognitoId = async (cognitoId) => {
+    const user = await DataStore.query(AppUser, (user) =>
+      user.cognitoId.eq(cognitoId)
+    );
+    return user;
+  };
 
   useEffect(() => {
     async function fetchData() {
       try {
         //Identity from DB
-        const cognitoUser = await Auth.currentAuthenticatedUser();
-        const identityId = cognitoUser.getSignInUserSession().getIdToken()
-          .payload.sub;
-        setIdentityId(identityId);
+        const cognitoId = await getIdentityId();
+        setIdentityId(cognitoId);
         //AppUser from DB
-        const user = await DataStore.query(AppUser, (user) =>
-          user.cognitoId("eq", identityId)
-        );
+        let user = await queryUserByCognitoId(cognitoId);
         if (user[0]) {
+          console.log("User from DB (1st attempt): ", user[0]);
           setDbUser(user[0]);
           setFullName(user[0].name);
-          setDateOfBirth(new Date(user[0].dateOfBirth));
+          setDateOfBirth(new Date(user[0].birthday));
           setCreationDate(user[0].creationDate);
+        } else {
+          console.log("User not found, second atempt...");
+          user = await queryUserByCognitoId(cognitoId);
+          if (user[0]) {
+            console.log("User from DB (2nd attempt): ", user[0]);
+            setDbUser(user[0]);
+            setFullName(user[0].name);
+            setDateOfBirth(new Date(user[0].birthday));
+            setCreationDate(user[0].creationDate);
+          }
         }
+
         //code to get image from s3 bucket
-        const response = await Storage.get(`profile-${identityId}.jpeg`);
-        setProfileImage(response);
+        const responseUrl = await Storage.get(`profile-${cognitoId}.jpeg`, {
+          level: "private",
+        });
+        //console.log("response S3: ", responseUrl);
+        if (responseUrl) {
+          downloadProfileImage(responseUrl, `profile-${cognitoId}.jpeg`);
+        }
       } catch (error) {
         console.log("Error when loading data from profile: ", error);
       }
@@ -61,17 +108,55 @@ const MyProfile = () => {
     fetchData();
   }, []);
 
+  const convertAwsDateToLocaleDateString = (dateString) => {
+    const parts = dateString.split("-");
+    const year = parseInt(parts[0]);
+    const month = parseInt(parts[1]) - 1; // Los meses en JavaScript son indexados desde 0, por lo que restamos 1
+    const day = parseInt(parts[2]);
+
+    return new Date(year, month, day).toLocaleDateString();
+  };
+
   const handleDateChange = (event, selectedDate) => {
-    console.log("selectedDate: ", selectedDate);
+    const timezoneOffsetInMinutes = new Date().getTimezoneOffset();
+    const adjustedDate = new Date(
+      selectedDate.getTime() - timezoneOffsetInMinutes * 60000
+    );
     setShowDatePicker(Platform.OS === "ios");
-    if (selectedDate != dateOfBirth) {
+    //console.log("selectedDate: ", adjustedDate.toLocaleDateString());
+    //console.log("current dateOfBirth: ", dateOfBirth.toLocaleDateString());
+    //console.log("current dbUser.birthday: ", dbUser.birthday);
+    const dbBirthday = convertAwsDateToLocaleDateString(dbUser.birthday);
+    console.log(
+      `adjustedDated - ${adjustedDate.toLocaleDateString()} - dbBirthday - ${
+        dbUser.birthday
+      }`
+    );
+    if (adjustedDate.toLocaleDateString() !== dbBirthday) {
+      console.log("dateOfBirth when date changed: ", dateOfBirth);
+
       setIsDateOfBirthChanged(true);
-      setDateOfBirth(selectedDate);
+    } else {
+      setIsDateOfBirthChanged(false);
     }
+    setDateOfBirth(adjustedDate);
   };
 
   const showMode = () => {
     setShowDatePicker(true);
+  };
+
+  const handleTextChange = (text) => {
+    if (text !== dbUser.name) {
+      //console.log("fullName when text changed: ", dbUser.name);
+      //console.log("text when text changed: ", text);
+      setIsFullNameChanged(true);
+    } else {
+      //console.log("fullName when text not-changed: ", dbUser.name);
+      //console.log("text when text not-changed: ", text);
+      setIsFullNameChanged(false);
+    }
+    setFullName(text);
   };
 
   const pickImageFromGallery = async () => {
@@ -131,8 +216,10 @@ const MyProfile = () => {
 
   const updateProfile = async () => {
     try {
+      let update = false;
       let s3Url;
       if (profileImage && isProfileImageChanged) {
+        console.log("profileImage when updatingProfile: ", profileImage);
         const response = await fetch(profileImage.uri);
         const blob = await response.blob();
 
@@ -140,6 +227,7 @@ const MyProfile = () => {
         console.log("fileName of profileImage: ", fileName);
 
         s3Url = await uploadImage(fileName, blob);
+        update = true;
       }
 
       //update existing AppUser in DB
@@ -153,9 +241,14 @@ const MyProfile = () => {
           })
         );
         console.log("userUpdated: ", userUpdated);
+        update = true;
       }
 
-      Alert.alert("Success", "Profile updated successfully!");
+      if (update) {
+        Alert.alert("Success", "Profile updated successfully!");
+      } else {
+        Alert.alert("Info", "Profile not updated!");
+      }
     } catch (error) {
       console.log(`Error occurred while updating profile: `, error);
       Alert.alert("Error", "Failed to update profile. Please try again.");
@@ -170,13 +263,13 @@ const MyProfile = () => {
     >
       <CustomHeader />
       <View style={styles.content}>
-        <Text style={styles.welcomeText}>Hi ${fullName}!</Text>
+        <Text style={styles.welcomeText}>Hi {fullName}!</Text>
         {percentage !== 0 && (
           <Text style={styles.percentage}>{percentage}%</Text>
         )}
-        {profileImage ? (
+        {downloadedImageUri ? (
           <Image
-            source={{ uri: profileImage.uri }}
+            source={{ uri: downloadedImageUri }}
             style={styles.profileImage}
           />
         ) : (
@@ -199,10 +292,7 @@ const MyProfile = () => {
             style={styles.input}
             placeholder="Preferred Name"
             value={fullName}
-            onChangeText={(text) => {
-              setIsFullNameChanged(true);
-              setFullName(text);
-            }}
+            onChangeText={(text) => handleTextChange(text)}
           />
         </View>
         <TouchableWithoutFeedback onPress={showMode}>
@@ -287,14 +377,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   dateOfBirthText: {
-    fontSize: 16,
     width: "56%", // Ajusta el ancho del TextInput al 80% del contenedor
     height: 40,
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 4,
     marginBottom: 16,
-    paddingHorizontal: 3,
+    paddingHorizontal: 8,
     backgroundColor: "#fff",
     verticalAlign: "middle",
   },

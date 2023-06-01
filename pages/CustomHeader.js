@@ -26,6 +26,10 @@ const CustomHeader = () => {
     navigation.navigate("MyProfile");
   }
 
+  const handleRecordAudio = () => {
+    navigation.navigate("Entry");
+  }
+
   const iconColor = "black";
   const iconSize = 20;
 
@@ -53,6 +57,14 @@ const CustomHeader = () => {
             title="My Profile"
             leadingIcon={({ color, size }) => (
               <Ionicons name="person-circle-outline" size={iconSize} color={iconColor} style={styles.icon} />
+            )}
+          />
+          <Menu.Item
+            onPress={handleRecordAudio}
+            style={styles.menuItem}
+            title="Recorder"
+            leadingIcon={({ color, size }) => (
+              <Ionicons name="mic-outline" size={iconSize} color={iconColor} style={styles.icon} />
             )}
           />
           <Menu.Item

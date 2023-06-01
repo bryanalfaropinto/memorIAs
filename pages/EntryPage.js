@@ -8,13 +8,13 @@ import RecordAudio from "./audio/RecordAudio";
 import AudioList from "./audio/AudioList";
 import CustomHeader from "./CustomHeader";
 import AppContext from "./AppContext";
-import AppUserForm from "./profile/AppUserForm"
+import AppUserForm from "./profile/AppUserForm";
 
 const Tab = createBottomTabNavigator();
 
 const EntryPage = () => {
-
-  const { audioFolder, isInitialRegistration, setAudioList } = useContext(AppContext);
+  const { audioFolder, isInitialRegistration, setAudioList } =
+    useContext(AppContext);
 
   const loadAudioList = async () => {
     try {
@@ -37,6 +37,9 @@ const EntryPage = () => {
     loadAudioList();
   }, []);
 
+  const iconColorSelected = "#000000";
+  const iconColorUnselected = "#808080";
+
   if (isInitialRegistration) {
     return (
       <View style={styles.mainContainer}>
@@ -52,7 +55,14 @@ const EntryPage = () => {
     <View style={styles.mainContainer}>
       <CustomHeader />
       <View style={styles.content}>
-        <Tab.Navigator screenOptions={{ headerShown: false, tabBarStyle: styles.tabBar }}>
+        <Tab.Navigator
+          screenOptions={{
+            headerShown: false,
+            tabBarStyle: styles.tabBar,
+            tabBarActiveTintColor: "#000000",
+            tabBarInactiveTintColor: "#808080",
+          }}
+        >
           <Tab.Screen
             name="RecordAudio"
             component={RecordAudio}
@@ -60,7 +70,21 @@ const EntryPage = () => {
               tabBarLabel: "Record Audio",
               tabBarIcon: ({ color, size }) => (
                 <View style={styles.iconContainer}>
-                  <MaterialIcons name="mic" color={"#000000"} size={size} />
+                  <MaterialIcons
+                    name="mic"
+                    color={color}
+                    size={size}
+                    onLayout={() => {
+                      color = iconColorSelected;
+                    }}
+                    onPress={() => {
+                      if (color === iconColorSelected) {
+                        color = iconColorUnselected;
+                      } else {
+                        color = iconColorSelected;
+                      }
+                    }}
+                  />
                 </View>
               ),
             }}
@@ -72,7 +96,21 @@ const EntryPage = () => {
               tabBarLabel: "Audios List",
               tabBarIcon: ({ color, size }) => (
                 <View style={styles.iconContainer}>
-                  <MaterialIcons name="audiotrack" color={"#000000"} size={size} />
+                  <MaterialIcons
+                    name="audiotrack"
+                    color={color}
+                    size={size}
+                    onLayout={() => {
+                      color = iconColorSelected;
+                    }}
+                    onPress={() => {
+                      if (color === iconColorSelected) {
+                        color = iconColorUnselected;
+                      } else {
+                        color = iconColorSelected;
+                      }
+                    }}
+                  />
                 </View>
               ),
             }}
