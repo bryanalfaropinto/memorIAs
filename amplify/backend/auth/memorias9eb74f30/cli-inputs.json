@@ -64,6 +64,6 @@
     "userPoolGroups": false,
     "adminQueries": false,
     "thirdPartyAuth": false,
-    "oAuthMetadata": "{\"AllowedOAuthFlows\":[\"code\"],\"AllowedOAuthScopes\":[\"phone\",\"email\",\"openid\",\"profile\",\"aws.cognito.signin.user.admin\"],\"CallbackURLs\":[\"exp://mpnlduw.anonymous.19000.exp.direct\"],\"LogoutURLs\":[\"exp://mpnlduw.anonymous.19000.exp.direct\"]}"
+    "oAuthMetadata": "{\"AllowedOAuthFlows\":[\"code\"],\"AllowedOAuthScopes\":[\"phone\",\"email\",\"openid\",\"profile\",\"aws.cognito.signin.user.admin\"],\"CallbackURLs\":[\"exp://mpnlduw.bryan.alfaro.pinto.19000.exp.direct\"],\"LogoutURLs\":[\"exp://mpnlduw.bryan.alfaro.pinto.19000.exp.direct\"]}"
   }
 }
