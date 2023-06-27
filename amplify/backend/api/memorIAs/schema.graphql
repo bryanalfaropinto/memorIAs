@@ -10,9 +10,10 @@ type AppUser @model @auth(rules: [{allow: public}, {allow: private}]) {
 type Audio @model @auth(rules: [{allow: public}, {allow: private}]) {
   id: ID!
   title: String
-  s3UrlPath: AWSURL
+  s3Key: String
   expoFileSytemPath: String
   metadata: AWSJSON
   appuserID: ID! @index(name: "byAppUser")
   AppUser: AppUser @belongsTo(fields: ["appuserID"])
-} 
+}
+ 

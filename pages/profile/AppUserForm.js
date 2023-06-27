@@ -8,7 +8,6 @@ import {
   Platform,
   Alert,
   TextInput,
-  KeyboardAvoidingView,
   TouchableWithoutFeedback,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
@@ -19,20 +18,133 @@ import { AppUser } from "../../src/models";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import AppContext from "../AppContext";
+import { Formik, useFormikContext } from "formik";
+import * as Yup from "yup";
 
 const AppUserForm = () => {
-  const [fullName, setFullName] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState(new Date());
-  const [profileImage, setProfileImage] = useState(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [percentage, setPercentage] = useState(0);
-
+  const [defaultBirthday, setDefaultBirthday] = useState(new Date());
   const { setIsInitialRegistration } = useContext(AppContext);
 
+  const initialValues = {
+    fullName: "",
+    profileImageUri: "",
+    percentage: 0,
+    dateOfBirth: defaultBirthday,
+  };
+
+  const uploadImage = async (filename, img, setFieldValue) => {
+    await Auth.currentCredentials();
+    try {
+      //code to put a file in s3 bucket
+      const response = await Storage.put(filename, img, {
+        level: "private",
+        contentType: "image/jpeg",
+        progressCallback(progress) {
+          console.log(`Uploaded: ${progress.loaded}/${progress.total}`);
+          //setLoading(progress);
+          const calculated = parseInt((progress.loaded / progress.total) * 100);
+          setFieldValue("percentage", calculated); // due to s3 put function scoped
+        },
+      });
+      console.log("successful load of photo in S3: ", response);
+      const url = await Storage.get(response.key);
+      return url;
+    } catch (error) {
+      console.log("error while uploading image to s3: ", error);
+      return error.response;
+    }
+  };
+
+  const handleFormSubmit = async (values, actions) => {
+    console.log("submit: ", values);
+    //console.log("actions: ", actions.setFieldValue("dateOfBirth", new Date("1995-12-17T03:24:00")));
+
+    try {
+      const cognitoUser = await Auth.currentAuthenticatedUser();
+      const identityId = cognitoUser.getSignInUserSession().getIdToken()
+        .payload.sub;
+      console.log("identityId: ", identityId);
+
+      let s3Url;
+      if (values.profileImageUri !== "") {
+        const response = await fetch(values.profileImageUri);
+        const blob = await response.blob();
+        const fileName = `profile-${identityId}.jpeg`;
+        s3Url = await uploadImage(fileName, blob, actions.setFieldValue);
+      }
+
+      //load new user to DB
+      const dateOfBirthAWS = values.dateOfBirth.toISOString();
+      console.log(
+        "dateOfBirth: ",
+        dateOfBirthAWS.slice(0, dateOfBirthAWS.indexOf("T"))
+      );
+
+      const fullName = values.fullName;
+      await DataStore.save(
+        new AppUser({
+          cognitoId: identityId,
+          name: fullName,
+          birthday: dateOfBirthAWS.slice(0, dateOfBirthAWS.indexOf("T")),
+          photo: s3Url,
+        })
+      );
+
+      actions.setFieldValue("fullName", "");
+      actions.setFieldValue("dateOfBirth", defaultBirthday);
+      actions.setFieldValue("profileImageUri", "");
+      actions.setFieldValue("percentage", 0);
+
+      setIsInitialRegistration(false);
+
+      Alert.alert("Success", "Profile updated successfully!");
+    } catch (error) {
+      console.log(`Error occurred while updating profile: `, error);
+      Alert.alert("Error", "Failed to update profile. Please try again.");
+    }
+  };
+
+  const validationSchema = Yup.object().shape({
+    fullName: Yup.string().required("Alias is required"),
+    dateOfBirth: Yup.date()
+      .required("Birthday is required")
+      .test("valid-date", "Birthday must be a valid date", (date) => {
+        return date < defaultBirthday;
+      }),
+  });
+
+  return (
+    <Formik
+      initialValues={initialValues}
+      validationSchema={validationSchema}
+      onSubmit={(values, actions) => {
+        handleFormSubmit(values, actions);
+      }}
+    >
+      <View style={styles.container}>
+        <Text style={styles.welcomeText}>Welcome!</Text>
+        <FormikForm />
+      </View>
+    </Formik>
+  );
+};
+
+const FormikForm = () => {
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const {
+    values,
+    setFieldValue,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+    touched,
+    errors,
+  } = useFormikContext();
+
   const handleDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || dateOfBirth;
     setShowDatePicker(Platform.OS === "ios");
-    setDateOfBirth(currentDate);
+    setFieldValue("dateOfBirth", selectedDate);
   };
 
   const showMode = () => {
@@ -59,119 +171,54 @@ const AppUserForm = () => {
 
     if (!result.canceled) {
       console.log("Loaded image uri: ", result.assets[0]);
-      setProfileImage(result.assets[0]);
-    }
-  };
-
-  const setLoading = (progress) => {
-    const calculated = parseInt((progress.loaded / progress.total) * 100);
-    updatePercentage(calculated); // due to s3 put function scoped
-  };
-
-  const updatePercentage = (number) => {
-    setPercentage(number);
-  };
-
-  const uploadImage = async (filename, img) => {
-    await Auth.currentCredentials();
-    try {
-      //code to put a file in s3 bucket
-      const response = await Storage.put(filename, img, {
-        level: "private",
-        contentType: "image/jpeg",
-        progressCallback(progress) {
-          console.log(`Uploaded: ${progress.loaded}/${progress.total}`);
-          setLoading(progress);
-        },
-      });
-      console.log("successful load of photo in S3: ", response);
-      const url = await Storage.get(response.key);
-      return url;
-    } catch (error) {
-      console.log("error while uploading image to s3: ", error);
-      return error.response;
-    }
-  };
-
-  const getIdentityId = async () => {
-    const cognitoUser = await Auth.currentAuthenticatedUser();
-    const identityId = cognitoUser.getSignInUserSession().getIdToken()
-      .payload.sub;
-    //console.log("IdentityId from authenticated user: ", identityId);
-    return identityId;
-  };
-
-  const updateProfile = async () => {
-    try {
-      //load profile image to S3
-      //code to obtain  the cognitoId from Auth.currentUserCredentials()
-      const cognitoId = await getIdentityId();
-      console.log("cognitoId: ", cognitoId);
-      let s3Url;
-      if (profileImage) {
-        const response = await fetch(profileImage.uri);
-        const blob = await response.blob();
-
-        const fileName = `profile-${cognitoId}.jpeg`;
-        console.log("fileName of profileImage: ", fileName);
-
-        s3Url = await uploadImage(fileName, blob);
-      }
-
-      //load new user to DB
-      const dateOfBirthAWS = dateOfBirth.toISOString();
-      console.log(
-        "dateOfBirth: ",
-        dateOfBirthAWS.slice(0, dateOfBirthAWS.indexOf("T"))
-      );
-
-      await DataStore.save(
-        new AppUser({
-          cognitoId: cognitoId,
-          name: fullName,
-          birthday: dateOfBirthAWS.slice(0, dateOfBirthAWS.indexOf("T")),
-          photo: s3Url,
-        })
-      );
-
-      setFullName("");
-      setDateOfBirth(new Date());
-      setProfileImage(null);
-      setIsInitialRegistration(false);
-
-      Alert.alert("Success", "Profile updated successfully!");
-    } catch (error) {
-      console.log(`Error occurred while updating profile: `, error);
-      Alert.alert("Error", "Failed to update profile. Please try again.");
+      setFieldValue("profileImageUri", result.assets[0].uri);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-    >
-      <Text style={styles.welcomeText}>Welcome!</Text>
-      {percentage !== 0 && <Text style={styles.percentage}>{percentage}%</Text>}
-      {profileImage ? (
-        <Image source={{ uri: profileImage.uri }} style={styles.profileImage} />
-      ) : (
-        <Text style={styles.profileImagePlaceholder}>Choose image profile</Text>
+    <View style={styles.formContainer}>
+      {values.percentage !== 0 && (
+        <Text style={styles.percentage}>{values.percentage}%</Text>
       )}
-      <TouchableOpacity style={styles.button} onPress={pickImageFromGallery}>
-        <Text style={styles.buttonText}>Choose image</Text>
+      {values.profileImageUri !== "" ? (
+        <Image
+          source={{ uri: values.profileImageUri }}
+          style={styles.profileImage}
+        />
+      ) : (
+        <Image
+          source={require("../../assets/neutral.png")}
+          style={styles.profileImage}
+        />
+      )}
+      <TouchableOpacity
+        style={styles.buttonSaveImage}
+        onPress={pickImageFromGallery}
+      >
+        <Text style={styles.buttonTextSaveImage}>Choose image</Text>
       </TouchableOpacity>
+      {touched.fullName && errors.fullName && (
+        <Text style={styles.errorText}>{errors.fullName}</Text>
+      )}
       <View style={styles.dateOfBirthContainer}>
-        <Ionicons name="person-circle" size={24} color="black" style={styles.icon} />
+        <Ionicons
+          name="person-circle"
+          size={24}
+          color="black"
+          style={styles.icon}
+        />
         <Text style={styles.dateOfBirthLabel}>Alias</Text>
         <TextInput
           style={styles.input}
           placeholder="Preferred Name"
-          value={fullName}
-          onChangeText={(text) => setFullName(text)}
+          value={values.fullName}
+          onChangeText={handleChange("fullName")}
+          onBlur={handleBlur("fullName")}
         />
       </View>
+      {touched.dateOfBirth && errors.dateOfBirth && (
+        <Text style={styles.errorText}>{errors.dateOfBirth}</Text>
+      )}
       <TouchableWithoutFeedback onPress={showMode}>
         <View style={styles.dateOfBirthContainer}>
           <Ionicons
@@ -182,23 +229,23 @@ const AppUserForm = () => {
           />
           <Text style={styles.dateOfBirthLabel}>Birthday</Text>
           <Text style={styles.dateOfBirthText}>
-            {dateOfBirth.toLocaleDateString()}
+            {values.dateOfBirth.toLocaleDateString()}
           </Text>
         </View>
       </TouchableWithoutFeedback>
       {showDatePicker && (
         <DateTimePicker
-          value={dateOfBirth}
+          value={values.dateOfBirth}
           mode="date"
           display="default"
           dateFormat="dayofweek day month"
           onChange={handleDateChange}
         />
       )}
-      <TouchableOpacity style={styles.button} onPress={updateProfile}>
+      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
         <Text style={styles.buttonText}>Save</Text>
       </TouchableOpacity>
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 
@@ -208,6 +255,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#fcf6db",
+    paddingHorizontal: 20,
+    width: "100%",
+  },
+  formContainer: {
+    alignItems: "center",
+    justifyContent: "center",
   },
   welcomeText: {
     fontSize: 24,
@@ -235,6 +288,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+  buttonSaveImage: {
+    backgroundColor: "#FFFFFF",
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 30,
+  },
+  buttonTextSaveImage: {
+    color: "#8a9c45",
+    fontSize: 16,
+    fontWeight: "normal",
+  },
+  percentage: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
   input: {
     width: "61%", // Ajusta el ancho del TextInput al 80% del contenedor
     height: 40,
@@ -248,7 +316,7 @@ const styles = StyleSheet.create({
   dateOfBirthContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 5,
   },
   dateOfBirthLabel: {
     marginRight: 5,
@@ -256,20 +324,22 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   dateOfBirthText: {
-    fontSize: 16,
     width: "56%", // Ajusta el ancho del TextInput al 80% del contenedor
     height: 40,
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 4,
     marginBottom: 16,
-    paddingHorizontal: 3,
+    paddingHorizontal: 8,
     backgroundColor: "#fff",
     verticalAlign: "middle",
   },
   icon: {
     marginRight: 5,
     marginBottom: 16,
+  },
+  errorText: {
+    color: "red",
   },
 });
 

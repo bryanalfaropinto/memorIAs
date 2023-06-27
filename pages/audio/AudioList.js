@@ -9,19 +9,18 @@ import {
   RefreshControl,
 } from "react-native";
 import * as FileSystem from "expo-file-system";
-import { Audio } from "expo-av";
+import { Audio as AudioExpo } from "expo-av";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
+import { Auth } from "aws-amplify";
+import { AppUser, Audio as AudioModel } from "../../src/models";
+import { DataStore } from "@aws-amplify/datastore";
+import { Storage } from "@aws-amplify/storage";
 import { v4 as uuidv4 } from "uuid";
 
 import AppContext from "../AppContext";
 
 const AudioList = () => {
-
-  const { audioFolder, audioList, audioAdded, setAudioList, setAudioAdded } =
-    useContext(AppContext);
-  //console.log("audioFolder en AudioList.js: ", audioFolder);
-  //console.log("audioList en AudioList.js: ", audioList);
-  //console.log("audioAdded en AudioList.js: ", audioAdded);
+  const { audioFolder, audioAdded, setAudioAdded } = useContext(AppContext);
 
   const [audioMetadata, setAudioMetadata] = useState({});
   const [isPlaying, setIsPlaying] = useState(null);
@@ -29,55 +28,6 @@ const AudioList = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   const cellWidthPercentage = 30; // Porcentaje de ancho deseado para cada celda
-
-  const loadAudioList = async () => {
-    try {
-      const dirInfo = await FileSystem.getInfoAsync(audioFolder);
-      //console.log("Folder Info loadAudioList: ", dirInfo);
-      if (dirInfo.exists && dirInfo.isDirectory) {
-        const files = await FileSystem.readDirectoryAsync(audioFolder);
-        console.log("Files in audioFolder: ", files);
-        setAudioList(files);
-      }
-    } catch (error) {
-      console.log(
-        `Error occurred while reading directory audioFolder ${audioFolder}: `,
-        error
-      );
-    }
-  };
-
-  const fetchAudioMetadata = async () => {
-    const metadata = {};
-    for (const item of audioList) {
-      const filePath = audioFolder + item;
-      try {
-        const audioInfo = await FileSystem.getInfoAsync(filePath);
-        //console.log("Audio Info en fetchAudioMetadata: ", audioInfo);
-        const size = audioInfo.size;
-        const date = new Date(audioInfo.modificationTime).toLocaleDateString();
-        const time = new Date(audioInfo.modificationTime).toLocaleTimeString();
-        const key = uuidv4();
-        //console.log(`Audio Metadata Item "${item}": `, size, date, time);
-        //metadata[key] = { size, date, time, filePath };
-        metadata[key] = { filename: item, size, date, time, filePath, key };
-      } catch (error) {
-        console.log(
-          `Error occurred while getting audio info from ${filePath}: `,
-          error
-        );
-      }
-    }
-    setAudioMetadata(metadata);
-    //console.log("AudioMetadata en fetchAudioMetadata: ", metadata);
-  };
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await loadAudioList();
-    await fetchAudioMetadata();
-    setRefreshing(false);
-  };
 
   useEffect(() => {
     console.log(
@@ -90,27 +40,137 @@ const AudioList = () => {
   useEffect(() => {
     if (audioAdded) {
       console.log(
-        "ejecutando loadAudioList useEffect x cambio audioAdded: ",
-        audioList
+        "ejecutando fetchAudioMetadata useEffect x cambio audioAdded: ",
+        audioMetadata
       );
-      loadAudioList();
+      fetchAudioMetadata();
     }
     setAudioAdded(false);
   }, [audioAdded]);
 
-  useEffect(() => {
-    console.log(
-      "ejecutando fetchAudioMetadata useEffect x cambio audioList: ",
-      audioList
-    );
-    fetchAudioMetadata();
-  }, [audioList]);
+  const loadUserId = async () => {
+    try {
+      const userAuth = await Auth.currentAuthenticatedUser();
+      let users = await DataStore.query(AppUser, (u) =>
+        u.cognitoId.eq(userAuth.attributes.sub)
+      );
+      return users[0].id;
+    } catch (error) {
+      console.log("Error occurred while loading userId: ", error);
+    }
+    return "";
+  };
+
+  const fetchAudioPathListFromDB = async () => {
+    //code to load list of audios as per AudioExpo Model from DB
+    const list = [];
+    try {
+      const userId = await loadUserId();
+      //console.log("userId in fetchAudioPathListFromDB: ", userId);
+      let audios = await DataStore.query(AudioModel, (a) =>
+        a.appuserID.eq(userId)
+      );
+      //console.log("query in fetchAudioPathListFromDB: ", audios);
+      for (const item of audios) {
+        //console.log("item title: ", item.title);
+        list.push({
+          id: item.id,
+          path: item.expoFileSytemPath,
+          name: item.title,
+          key: item.s3Key,
+          expoUrl: item.expoFileSytemPath,
+          type: item.metadata.type,
+          size: item.metadata.size,
+          updatedAt: item.createdAt,
+        });
+      }
+      return list;
+    } catch (error) {
+      console.log(
+        `Error occurred while querying audios from AudioExpo Model: `,
+        error
+      );
+    }
+    return list;
+  };
+
+  const fetchAudioMetadata = async () => {
+    //load list of audios as per AudioExpo Model from DB
+    const audioListDB = await fetchAudioPathListFromDB();
+    //console.log("audioListDB: ", audioListDB);
+    const metadata = {};
+    //set metadata objects (audios list ui) based on list of audios coming from DB
+    for (const audioItemDB of audioListDB) {
+      try {
+        const existingLocalAudioInfo = await FileSystem.getInfoAsync(
+          audioItemDB.expoUrl
+        );
+        if (!existingLocalAudioInfo.exists) {
+          //download file from cloud storage to local expo file system
+          const credentials = await Auth.currentCredentials();
+          const s3Key = audioItemDB.key;
+          console.log("s3Key: ", s3Key);
+          const responseUrl = await Storage.get(s3Key, {
+            level: "private",
+          });
+
+          if (responseUrl) {
+            const response = await fetch(responseUrl, {
+              method: "GET",
+              headers: {
+                "Content-Type": "audio/mpeg",
+              },
+            });
+            const finalFileUri =
+              audioFolder + audioItemDB.name + "." + audioItemDB.type;
+            const { uri } = await FileSystem.downloadAsync(
+              response.url,
+              finalFileUri
+            );
+            console.log("file downloaded and created in Uri: ", uri);
+            const downloadedAudioInfo = await FileSystem.getInfoAsync(uri);
+            console.log("downloadedAudioInfo: ", downloadedAudioInfo);
+          }
+        }
+        //set local file system path to metadata object
+        const createdAt = new Date(audioItemDB.updatedAt).toLocaleDateString();
+        const key = uuidv4();
+        metadata[key] = {
+          dbId: audioItemDB.id,
+          filename: audioItemDB.name,
+          size: audioItemDB.size,
+          date: createdAt,
+          path: audioItemDB.path,
+          s3Key: audioItemDB.key,
+          key,
+        };
+      } catch (error) {
+        console.log(
+          "Error occurred while fetching Audio from local Expo: ",
+          error
+        );
+      }
+    }
+    setAudioMetadata(metadata);
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchAudioMetadata();
+    setRefreshing(false);
+  };
 
   async function playSound(filePath) {
     try {
-      const { sound, status } = await Audio.Sound.createAsync({
+      console.log("filePath to play: ", filePath);
+      const { sound, status } = await AudioExpo.Sound.createAsync({
         uri: filePath,
+        headers: {
+          "Content-Type": "audio/m4a",
+        },
+        overrideFileExtensionAndroid: "m4a",
       });
+      //console.log("sound: ", sound);
       setCurrentSound(sound);
       await sound.playAsync();
       setIsPlaying(filePath);
@@ -134,27 +194,47 @@ const AudioList = () => {
     }
   }
 
-  const confirmDeleteAudio = (filePath) => {
+  const confirmDeleteAudio = (id, key, filePath) => {
     // Mostrar ventana de confirmación
     Alert.alert(
       "Confirm deletion",
-      "Are you sure you want to delete the audio?",
+      "Are you sure you want to delete the Audio?",
       [
         { text: "Cancel", style: "cancel" },
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => deleteSound(filePath),
+          onPress: () => deleteSound(id, key, filePath),
         },
       ]
     );
   };
 
-  async function deleteSound(filePath) {
+  const deleteFromCloud = async (id, key) => {
     try {
-      await FileSystem.deleteAsync(filePath);
-      setAudioAdded(true); // Para que se actualice la lista de audios
-      setIsPlaying(null);
+      console.log("deleting from cloud: ", id, key);
+      //remove file from Storage
+      const return1 = await Storage.remove(key, { level: "private" });
+      console.log("return1: ", return1);
+      //remove record from DB
+      const return2 = await DataStore.delete(AudioModel, id);
+      console.log("return2: ", return2);
+      if (return1.$metadata.httpStatusCode === 204 && return2.length > 0)
+        return true;
+      else return false;
+    } catch (error) {
+      console.log("Error occurred while deleting from cloud: ", error);
+    }
+  };
+
+  async function deleteSound(id, key, filePath) {
+    try {
+      const deletedFromCloud = await deleteFromCloud(id, key);
+      if (deletedFromCloud) {
+        await FileSystem.deleteAsync(filePath);
+        setAudioAdded(true); // Para que se actualice la lista de audios
+        setIsPlaying(null);
+      }
     } catch (error) {
       console.log("Error occurred while deleting sound: ", error);
     }
@@ -162,9 +242,7 @@ const AudioList = () => {
 
   return (
     <View style={styles.container}>
-      {audioList.length > 0 &&
-        audioMetadata &&
-        Object.keys(audioMetadata).length > 0 ? (
+      {audioMetadata && Object.keys(audioMetadata).length > 0 ? (
         <FlatList
           data={Object.values(audioMetadata)} // Utilizar Object.values para obtener un array de los valores de audioMetadata
           keyExtractor={(item, index) => item.key.toString()} // Utilizar item.key como key
@@ -184,8 +262,8 @@ const AudioList = () => {
                 <View
                   style={[styles.cell, { flex: 1 - 2 * cellWidthPercentage }]}
                 >
-                  {!isPlaying || isPlaying !== item.filePath ? ( // Comprobar si no se está reproduciendo o el audio en reproducción no coincide con el actual
-                    <TouchableOpacity onPress={() => playSound(item.filePath)}>
+                  {!isPlaying || isPlaying !== item.path ? ( // Comprobar si no se está reproduciendo o el AudioExpo en reproducción no coincide con el actual
+                    <TouchableOpacity onPress={() => playSound(item.path)}>
                       <View style={styles.iconContainer}>
                         <FontAwesome5 name="play-circle" size={20} />
                       </View>
@@ -202,7 +280,9 @@ const AudioList = () => {
                   style={[styles.cell, { flex: 1 - 2 * cellWidthPercentage }]}
                 >
                   <TouchableOpacity
-                    onPress={() => confirmDeleteAudio(item.filePath)}
+                    onPress={() =>
+                      confirmDeleteAudio(item.dbId, item.s3Key, item.path)
+                    }
                   >
                     <View style={styles.iconContainer}>
                       <FontAwesome5 name="trash-alt" size={20} />
@@ -217,7 +297,9 @@ const AudioList = () => {
           }
         />
       ) : (
-        <Text>No audios created</Text>
+        <Text style={styles.noAudioText}>
+          No audios created. Start creating your memories!
+        </Text>
       )}
     </View>
   );
@@ -254,6 +336,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     width: 30, // Ajustar el ancho deseado del contenedor del ícono
     height: 30, // Ajustar el alto deseado del contenedor del ícono
+  },
+  noAudioText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "center",
+    paddingVertical: 20,
+    backgroundColor: "#fcf6db",
+    borderRadius: 5,
+    width: "100%",
   },
 });
 

@@ -1,105 +1,44 @@
-import React, { useState, useContext, useRef } from "react";
+import React, { useState, useContext } from "react";
 import {
   StyleSheet,
   View,
   Button,
   Modal,
   TextInput,
-  // Dimensions,
+  Alert,
 } from "react-native";
-import { Audio } from "expo-av";
+import { Audio as ExpoAudio } from "expo-av";
 import * as FileSystem from "expo-file-system";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
-import Animated, {
-  //   useSharedValue,
-  //   useAnimatedStyle,
-  interpolate,
-} from "react-native-reanimated";
-
+import { Auth } from "aws-amplify";
+import { Storage } from "@aws-amplify/storage";
+import { DataStore } from "@aws-amplify/datastore";
+import { AppUser, Audio as AudioModel } from "../../src/models";
 import AppContext from "../AppContext";
 
 const RecordAudio = () => {
   const { audioFolder, setAudioAdded } = useContext(AppContext);
-
   const [isRecording, setIsRecording] = useState(false);
   const [recording, setRecording] = useState();
   const [fileUri, setFileUri] = useState();
   const [modalVisible, setModalVisible] = useState(false);
   const [recordingTitle, setRecordingTitle] = useState("");
-  // const [windowWidth, setWindowWidth] = useState(
-  //   Dimensions.get("window").width
-  // );
-  // const [animationValue, setAnimationValue] = useState(useSharedValue(0));
 
   const navigation = useNavigation();
-
-  const meterIntervalRef = useRef(null);
-
-  // const animatedStyle = useAnimatedStyle(() => {
-  //   return {
-  //     width: `${animationValue.value * 100}%`,
-  //   };
-  // });
-
-  // useEffect(() => {
-  //   const updateWindowWidth = () => {
-  //     setWindowWidth(Dimensions.get("window").width);
-  //   };
-
-  //   Dimensions.addEventListener("change", updateWindowWidth);
-
-  //   return () => {
-  //     Dimensions.removeEventListener("change", updateWindowWidth);
-  //   };
-  // }, []);
-
-  // useEffect(() => {
-  //   if (isRecording) {
-  //     startMetering();
-  //   } else {
-  //     stopMetering();
-  //   }
-  // }, [isRecording]);
-
-  const startMetering = () => {
-    if (recording) {
-      meterIntervalRef.current = setInterval(async () => {
-        const { isRecording, metering } = await recording.getStatusAsync();
-        console.log("Metering: ", metering, " --- isRecording: ", isRecording);
-        if (isRecording) {
-          const intensity = interpolate(
-            metering,
-            [-160, 0],
-            [0, 1],
-            Animated.Extrapolate.CLAMP
-          );
-          console.log("Intensity: ", intensity);
-          setAnimationValue(intensity);
-        }
-      }, 100);
-    }
-  };
-
-  const stopMetering = () => {
-    if (meterIntervalRef.current) {
-      clearInterval(meterIntervalRef.current);
-      meterIntervalRef.current = null;
-    }
-  };
 
   async function startRecording() {
     try {
       //console.log("Requesting submission... ");
-      await Audio.requestPermissionsAsync();
-      await Audio.setAudioModeAsync({
+      await ExpoAudio.requestPermissionsAsync();
+      await ExpoAudio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
       });
       //console.log("Start recording... ");
-      const recording = new Audio.Recording();
+      const recording = new ExpoAudio.Recording();
       await recording.prepareToRecordAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
+        ExpoAudio.RecordingOptionsPresets.HIGH_QUALITY
       );
       await recording.startAsync();
       setRecording(recording);
@@ -119,11 +58,140 @@ const RecordAudio = () => {
     //console.log("Recording stopped and stored at: ", uri);
     const fileInfo = await FileSystem.getInfoAsync(uri);
     setFileUri(fileInfo.uri);
-    //console.log("File path:", fileInfo.uri);
+    console.log("Initial File path:", fileInfo.uri);
 
     setIsRecording(false);
     setModalVisible(true);
   }
+
+  const uploadAudioToStorage = async (filename, audioBlob) => {
+    await Auth.currentCredentials();
+    try {
+      //code to put a file in s3 bucket
+      const response = await Storage.put(filename, audioBlob, {
+        level: "private",
+        contentType: "audio/mpeg",
+        progressCallback(progress) {
+          console.log(`Uploaded: ${progress.loaded}/${progress.total}`);
+          const calculated = parseInt((progress.loaded / progress.total) * 100);
+        },
+      });
+      console.log("successful load of audio file in S3: ", response); //key
+      const url = await Storage.get(response.key);
+      const data = {
+        Key: response.key,
+        S3Url: url,
+        Success: true,
+      };
+      return data;
+    } catch (error) {
+      console.log("error while uploading audio file to s3: ", error);
+      const data = {
+        ErrorMessage: error,
+        Success: false,
+      };
+      return data;
+    }
+  };
+
+  const uploadAudioToModel = async (
+    fileUri,
+    recordingTitle,
+    s3Key,
+    size,
+    audioType
+  ) => {
+    try {
+      //code to create new record in Audio model
+      const user = await Auth.currentAuthenticatedUser();
+      const cognitoId = user.getSignInUserSession().getIdToken().payload.sub;
+      //AppUser from DB
+      let users = await DataStore.query(AppUser, (user) =>
+        user.cognitoId.eq(cognitoId)
+      );
+      let userId;
+      if (users[0]) {
+        userId = users[0].id;
+      }
+      const lazyAudio = await DataStore.save(
+        new AudioModel({
+          title: recordingTitle,
+          s3Key: s3Key,
+          expoFileSytemPath: fileUri,
+          metadata: {
+            size: size,
+            type: audioType,
+            userName: cognitoId,
+          },
+          appuserID: userId,
+        })
+      );
+      console.log("New audio created: ", lazyAudio);
+      const data = {
+        AudioId: lazyAudio.id,
+        Success: true,
+      };
+      return data;
+    } catch (error) {
+      console.log("Error occurred while creating new audio: ", error);
+      const data = {
+        ErrorMessage: error,
+        Success: false,
+      };
+      return data;
+    }
+  };
+
+  const uploadAudioToCloud = async (fileUri, recordingTitle) => {
+    try {
+      let upload1Success = false;
+      //code to put a file in s3 bucket
+      const s3AudioFolder = "audios/";
+      const audioName = fileUri.split("/").pop();
+      //console.log("Audio name: ", audioName);
+      const audioType = audioName.split(".").pop();
+      //console.log("Audio type: ", audioType);
+      const response = await fetch(fileUri, {
+        method: "GET",
+        headers: {
+          "Content-Type": "audio/mpeg",
+        },
+      });
+      //console.log("response when uploading to cloud: ", response);
+      const blob = await response.blob();
+      //console.log("Blob uploading: ", blob);
+      const s3FileName = s3AudioFolder + audioName;
+      //console.log("s3FileName: ", s3FileName);
+      const data1 = await uploadAudioToStorage(s3FileName, blob);
+      if (data1.Success) {
+        upload1Success = true;
+        //console.log("S3 upload: ", data1);
+      }
+
+      let upload2Success = false;
+      //code to create new record in Audio model
+      const data2 = await uploadAudioToModel(
+        fileUri,
+        recordingTitle,
+        data1.Key,
+        blob.size,
+        audioType
+      );
+      if (data2.Success) {
+        upload2Success = true;
+        console.log("New audio model created: ", data2.AudioId);
+      }
+
+      if (upload1Success && upload2Success) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      console.log("Error occurred while uploading audio to cloud: ", error);
+      return false;
+    }
+  };
 
   async function saveRecording() {
     const newFileUri = `${audioFolder}${recordingTitle}.m4a`;
@@ -134,6 +202,15 @@ const RecordAudio = () => {
         to: newFileUri,
       });
       console.log("File copied from: ", fileUri, " --- to: ", newFileUri);
+
+      const result = await uploadAudioToCloud(newFileUri, recordingTitle);
+      console.log("Result of uploadAudioToCloud: ", result);
+
+      if (result) {
+        Alert.alert("Sucess", "Audio saved successfully");
+      } else {
+        Alert.alert("Error", "Audio not saved, try again");
+      }
     } catch (error) {
       console.log("Error occurred while saving sound: ", error);
     }
@@ -142,10 +219,6 @@ const RecordAudio = () => {
     setAudioAdded(true);
     navigation.navigate("AudioList"); // Navega al componente AudioList
   }
-
-  /* <View style={styles.recordingContainer}>
-        <Animated.View style={[styles.animationBar, animatedStyle]} />
-      </View> */
 
   return (
     <View style={styles.container}>

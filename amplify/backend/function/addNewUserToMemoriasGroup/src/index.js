@@ -40,25 +40,46 @@ exports.handler = async (event, context, callback) => {
 
     const data = await client.adminGetUser(params);
     console.log("data: ", data);
-    const code = data.UserAttributes.find(
+    const emailVerified = data.UserAttributes.find(
       (attr) => attr.Name === "email_verified"
     ).Value;
-    console.log("code: ", code);
+    console.log("emailVerified: ", emailVerified);
+    const userStatus = data.UserStatus;
+    console.log("userStatus: ", userStatus);
+    //change code to boolean
 
-    if (code) {
-      const params = {
-        GroupName: targetGroup,
+    if (emailVerified === "true" && userStatus !== "EXTERNAL_PROVIDER") {
+      //verify if user is already in the group
+      const groups = await client.adminListGroupsForUser({
         UserPoolId: userPoolId,
         Username: userName,
-      };
+      });
+      const groupFound = groups.Groups.find(
+        (group) => group.GroupName === targetGroup
+      );
+      if (groupFound) {
+        console.log(
+          `Group found "${groupFound.GroupName}" for´user "${userName}" in user pool`
+        );
+      } else {
+        console.log(
+          `Group "${targetGroup}" not found for user "${userName}" in user pool yet. Adding group...`
+        );
 
-      const data =await client.adminAddUserToGroup(params);
-      console.log("successfull adminAddUserToGroup: ", data);
+        const data = await client.adminAddUserToGroup({
+          GroupName: targetGroup,
+          UserPoolId: userPoolId,
+          Username: userName,
+        });
+        console.log("successfull adminCreateGroup: ", data);
+      }
+    } else {
+      if (userStatus === "EXTERNAL_PROVIDER") {
+        console.log("User is from External Provider");
+      }
     }
-
     // Return to Amazon Cognito
     callback(null, event);
-
   } catch (error) {
     console.error("Error: ", error, error.stack);
     throw error;

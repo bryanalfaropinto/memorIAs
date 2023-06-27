@@ -1,8 +1,15 @@
-import React, { useEffect, useContext } from "react";
+import React, { useEffect, useContext, useState } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import * as FileSystem from "expo-file-system";
-import { View, StyleSheet } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Keyboard,
+  Platform,
+  KeyboardAvoidingView,
+  ScrollView,
+} from "react-native";
 
 import RecordAudio from "./audio/RecordAudio";
 import AudioList from "./audio/AudioList";
@@ -13,6 +20,7 @@ import AppUserForm from "./profile/AppUserForm";
 const Tab = createBottomTabNavigator();
 
 const EntryPage = () => {
+  const [keyboardVerticalOffset, setKeyboardVerticalOffset] = useState(0);
   const { audioFolder, isInitialRegistration, setAudioList } =
     useContext(AppContext);
 
@@ -34,7 +42,28 @@ const EntryPage = () => {
   };
 
   useEffect(() => {
-    loadAudioList();
+    //loadAudioList();
+  }, []);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      "keyboardDidShow",
+      () => {
+        setKeyboardVerticalOffset(0);
+      }
+    );
+
+    const keyboardDidHideListener = Keyboard.addListener(
+      "keyboardDidHide",
+      () => {
+        setKeyboardVerticalOffset(0);
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
   }, []);
 
   const iconColorSelected = "#000000";
@@ -42,17 +71,30 @@ const EntryPage = () => {
 
   if (isInitialRegistration) {
     return (
-      <View style={styles.mainContainer}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={keyboardVerticalOffset}
+        style={styles.mainContainer}
+      >
         <CustomHeader />
-        <View style={styles.content}>
-          <AppUserForm />
-        </View>
-      </View>
+        <ScrollView
+          contentContainerStyle={styles.contentContainer}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.content}>
+            <AppUserForm />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     );
   }
 
   return (
-    <View style={styles.mainContainer}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={keyboardVerticalOffset}
+      style={styles.mainContainer}
+    >
       <CustomHeader />
       <View style={styles.content}>
         <Tab.Navigator
@@ -117,7 +159,7 @@ const EntryPage = () => {
           />
         </Tab.Navigator>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -126,20 +168,26 @@ export default EntryPage;
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#fcf6db",
+  },
+  contentContainer: {
+    flexGrow: 1,
   },
   content: {
     flex: 1,
-    justifyContent: "flex-end",
   },
   tabBar: {
     backgroundColor: "#a9c32a",
     borderTopColor: "transparent",
     elevation: 0,
+    shadowOpacity: 0,
   },
   iconContainer: {
     justifyContent: "center",
     alignItems: "center",
-    width: 50,
-    height: 50,
+    width: 60,
+    height: 60,
   },
 });

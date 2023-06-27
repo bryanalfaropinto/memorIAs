@@ -12,6 +12,7 @@ const App = () => {
   const [audioAdded, setAudioAdded] = useState(false);
   const [audioList, setAudioList] = useState([]);
   const [isInitialRegistration, setIsInitialRegistration] = useState(false);
+  const [userAudios, setUserAudios] = useState([]);
 
   const createAppFolder = async () => {
     try {
@@ -37,10 +38,12 @@ const App = () => {
         audioList,
         audioAdded,
         isInitialRegistration,
+        userAudios,
         setAudioFolder,
         setAudioList,
         setAudioAdded,
-        setIsInitialRegistration
+        setIsInitialRegistration,
+        setUserAudios,
       }}
     >
       <Navigation />

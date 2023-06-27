@@ -49,7 +49,7 @@ type EagerAudio = {
   };
   readonly id: string;
   readonly title?: string | null;
-  readonly s3UrlPath?: string | null;
+  readonly s3Key?: string | null;
   readonly expoFileSytemPath?: string | null;
   readonly metadata?: string | null;
   readonly appuserID: string;
@@ -65,7 +65,7 @@ type LazyAudio = {
   };
   readonly id: string;
   readonly title?: string | null;
-  readonly s3UrlPath?: string | null;
+  readonly s3Key?: string | null;
   readonly expoFileSytemPath?: string | null;
   readonly metadata?: string | null;
   readonly appuserID: string;

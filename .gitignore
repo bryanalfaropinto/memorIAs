@@ -37,3 +37,4 @@ amplifytools.xcconfig
 .secret-*
 **.sample
 #amplify-do-not-edit-end
+assets/client_secret_912525895593-88s9307uoenl03c3c3kkblme5qphor7b.apps.googleusercontent.com.json

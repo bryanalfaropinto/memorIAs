@@ -29,12 +29,15 @@
     "expo-file-system": "~15.2.2",
     "expo-image-picker": "~14.1.1",
     "expo-status-bar": "~1.4.4",
+    "expo-updates": "~0.16.4",
     "expo-web-browser": "~12.1.1",
+    "formik": "^2.4.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-native": "0.71.8",
     "react-native-fs": "^2.20.0",
     "react-native-get-random-values": "^1.8.0",
+    "react-native-masked-text": "^1.13.0",
     "react-native-paper": "^5.7.2",
     "react-native-reanimated": "^2.14.4",
     "react-native-table-component": "^1.2.2",
@@ -42,7 +45,7 @@
     "react-native-uuid": "^2.0.1",
     "react-native-vector-icons": "^9.2.0",
     "react-native-web": "~0.18.11",
-    "expo-updates": "~0.16.4"
+    "yup": "^1.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

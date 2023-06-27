@@ -22,11 +22,11 @@
       "function": {
         "S3Triggerad394d6f": {
           "deploymentBucketName": "amplify-memorias-dev-03328-deployment",
-          "s3Key": "amplify-builds/S3Triggerad394d6f-58384d74527961744a33-build.zip"
+          "s3Key": "amplify-builds/S3Triggerad394d6f-486d6d4c334b45635834-build.zip"
         },
         "addNewUserToMemoriasGroup": {
           "deploymentBucketName": "amplify-memorias-dev-03328-deployment",
-          "s3Key": "amplify-builds/addNewUserToMemoriasGroup-6666575876495a49334c-build.zip",
+          "s3Key": "amplify-builds/addNewUserToMemoriasGroup-6666366258334e645a79-build.zip",
           "targetGroup": "memoriasUserPoolGroup"
         }
       },

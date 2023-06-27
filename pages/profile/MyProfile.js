@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { Auth } from "aws-amplify";
+import { Storage } from "@aws-amplify/storage";
+import { DataStore } from "@aws-amplify/datastore";
 import {
   View,
   Text,
@@ -10,96 +13,197 @@ import {
   TextInput,
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
+  ScrollView,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import { Storage } from "@aws-amplify/storage";
-import { DataStore } from "@aws-amplify/datastore";
-import { Auth } from "aws-amplify";
-import { AppUser } from "../../src/models";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { Ionicons } from "@expo/vector-icons";
 import * as FileSystem from "expo-file-system";
+import { Formik, useFormikContext } from "formik";
+import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import * as Yup from "yup";
+import { AppUser } from "../../src/models";
 import CustomHeader from "../CustomHeader";
 
 const MyProfile = () => {
+  const [defaultBirthday, setDefaultBirthday] = useState(new Date());
+  const [isFullNameChanged, setIsFullNameChanged] = useState(false);
+  const [isProfileImageChanged, setIsProfileImageChanged] = useState(false);
+  const [isDateOfBirthChanged, setIsDateOfBirthChanged] = useState(false);
+  const [percentage, setPercentage] = useState(0);
   const [dbUser, setDbUser] = useState(null);
   const [identityId, setIdentityId] = useState("");
-  const [creationDate, setCreationDate] = useState(new Date());
-  const [fullName, setFullName] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState(new Date());
-  const [profileImage, setProfileImage] = useState(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [percentage, setPercentage] = useState(0);
-  const [isProfileImageChanged, setIsProfileImageChanged] = useState(false);
-  const [isFullNameChanged, setIsFullNameChanged] = useState(false);
-  const [isDateOfBirthChanged, setIsDateOfBirthChanged] = useState(false);
-  const [downloadedImageUri, setDownloadedImageUri] = useState(null);
 
-  const getIdentityId = async () => {
-    const cognitoUser = await Auth.currentAuthenticatedUser();
-    const identityId = cognitoUser.getSignInUserSession().getIdToken()
-      .payload.sub;
-    //console.log("IdentityId from authenticated user: ", identityId);
-    return identityId;
+  const initialValues = {
+    fullName: "",
+    profileImageUri: "",
+    dateOfBirth: defaultBirthday,
   };
 
-  const downloadProfileImage = async (preSignedUrl, fileName) => {
+  const validationSchema = Yup.object().shape({
+    fullName: Yup.string().required("Alias is required"),
+    dateOfBirth: Yup.date()
+      .required("Birthday is required")
+      .test("valid-date", "Birthday must be a valid date", (date) => {
+        return date < defaultBirthday;
+      }),
+  });
+
+  const uploadImage = async (filename, img) => {
+    await Auth.currentCredentials();
     try {
-      //console.log("URI pre-signed: ", preSignedUrl);
-      const response = await fetch(preSignedUrl, {
-        method: "GET",
-        headers: {
-          "Content-Type": "image/jpeg",
+      //code to put a file in s3 bucket
+      const response = await Storage.put(filename, img, {
+        level: "private",
+        contentType: "image/jpeg",
+        progressCallback(progress) {
+          console.log(`Uploaded: ${progress.loaded}/${progress.total}`);
+          const calculated = parseInt((progress.loaded / progress.total) * 100);
+          setPercentage(calculated);
         },
       });
-      const fileUri = FileSystem.cacheDirectory + fileName;
-      const { uri } = await FileSystem.downloadAsync(response.url, fileUri);
-      setDownloadedImageUri(uri);
+      console.log("successful load of photo in S3: ", response);
+      const url = await Storage.get(response.key);
+      return url;
     } catch (error) {
-      console.log("Error downloading image: ", error);
+      console.log("error while uploading image to s3: ", error);
+      return error.response;
     }
   };
 
-  const queryUserByCognitoId = async (cognitoId) => {
-    const user = await DataStore.query(AppUser, (user) =>
-      user.cognitoId.eq(cognitoId)
-    );
-    return user;
+  const handleFormSubmit = async (values) => {
+    console.log("submit: ", values);
+
+    try {
+      let update = false;
+      let s3Url;
+      console.log(
+        `isProfileImageChanged "${isProfileImageChanged}" - isFullNameChanged "${isFullNameChanged}" - isDateOfBirthChanged "${isDateOfBirthChanged}"`
+      );
+      if (values.profileImageUri !== "" && isProfileImageChanged) {
+        const response = await fetch(values.profileImageUri);
+        const blob = await response.blob();
+        const fileName = `profile-${identityId}.jpeg`;
+        s3Url = await uploadImage(fileName, blob);
+        setIsProfileImageChanged(false);
+        update = true;
+      }
+      //update existing AppUser in DB
+      if (dbUser && (isFullNameChanged || isDateOfBirthChanged)) {
+        const originalUser = await DataStore.query(AppUser, dbUser.id);
+        const newDate = values.dateOfBirth.toISOString().slice(0, 10);
+        //console.log("new date: ", newDate);
+        const userUpdated = await DataStore.save(
+          AppUser.copyOf(originalUser, (updated) => {
+            updated.name = values.fullName;
+            updated.birthday = newDate;
+          })
+        );
+        setDbUser(userUpdated);
+        setIsDateOfBirthChanged(false);
+        setIsFullNameChanged(false);
+        update = true;
+      }
+      if (update) {
+        console.log("successfully updated profile");
+        Alert.alert("Success", "Profile updated successfully!");
+      } else {
+        Alert.alert("Info", "No changes - Profile not updated!");
+      }
+    } catch (error) {
+      console.log(`Error occurred while updating profile: `, error);
+      Alert.alert("Error", "Failed to update profile. Please try again.");
+    }
   };
+
+  return (
+    <Formik
+      initialValues={initialValues}
+      validationSchema={validationSchema}
+      onSubmit={(values, actions) => {
+        handleFormSubmit(values);
+      }}
+    >
+      <View style={styles.container}>
+        <FormikForm
+          setIsProfileImageChanged={setIsProfileImageChanged}
+          setIsFullNameChanged={setIsFullNameChanged}
+          setIsDateOfBirthChanged={setIsDateOfBirthChanged}
+          percentage={percentage}
+          dbUser={dbUser}
+          setDbUser={setDbUser}
+          identityId={identityId}
+          setIdentityId={setIdentityId}
+        />
+      </View>
+    </Formik>
+  );
+};
+
+const FormikForm = ({
+  setIsProfileImageChanged,
+  setIsFullNameChanged,
+  setIsDateOfBirthChanged,
+  percentage,
+  dbUser,
+  setDbUser,
+  identityId,
+  setIdentityId,
+}) => {
+  const [imageVersion, setImageVersion] = useState(0);
+  const [imageTimestamp, setImageTimestamp] = useState(Date.now());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [localFullName, setLocalFullName] = useState("");
+  const [localBirthday, setLocalBirthday] = useState(new Date());
+
+  const {
+    values,
+    setFieldValue,
+    handleChange,
+    handleSubmit,
+    touched,
+    errors,
+  } = useFormikContext();
 
   useEffect(() => {
     async function fetchData() {
       try {
         //Identity from DB
-        const cognitoId = await getIdentityId();
+        const cognitoUser = await Auth.currentAuthenticatedUser();
+        const cognitoId = cognitoUser.getSignInUserSession().getIdToken()
+          .payload.sub;
         setIdentityId(cognitoId);
+
         //AppUser from DB
-        let user = await queryUserByCognitoId(cognitoId);
-        if (user[0]) {
-          console.log("User from DB (1st attempt): ", user[0]);
-          setDbUser(user[0]);
-          setFullName(user[0].name);
-          setDateOfBirth(new Date(user[0].birthday));
-          setCreationDate(user[0].creationDate);
-        } else {
-          console.log("User not found, second atempt...");
-          user = await queryUserByCognitoId(cognitoId);
-          if (user[0]) {
-            console.log("User from DB (2nd attempt): ", user[0]);
-            setDbUser(user[0]);
-            setFullName(user[0].name);
-            setDateOfBirth(new Date(user[0].birthday));
-            setCreationDate(user[0].creationDate);
-          }
+        let users = await DataStore.query(AppUser, (user) =>
+          user.cognitoId.eq(cognitoId)
+        );
+        if (users[0]) {
+          setDbUser(users[0]);
+          setFieldValue("fullName", users[0].name);
+          setLocalFullName(users[0].name);
+          const dateFromDB = new Date(users[0].birthday);
+          dateFromDB.setHours(24, 0, 0, 0); //to avoid -1 day when changing to locale
+          setFieldValue("dateOfBirth", dateFromDB);
+          setLocalBirthday(dateFromDB);
         }
 
         //code to get image from s3 bucket
-        const responseUrl = await Storage.get(`profile-${cognitoId}.jpeg`, {
+        const profileFileName = `profile-${cognitoId}.jpeg`;
+        const responseUrl = await Storage.get(profileFileName, {
           level: "private",
         });
-        //console.log("response S3: ", responseUrl);
+
+        //download image from s3 bucket and copy to cache directory from expo file system
         if (responseUrl) {
-          downloadProfileImage(responseUrl, `profile-${cognitoId}.jpeg`);
+          const response = await fetch(responseUrl, {
+            method: "GET",
+            headers: {
+              "Content-Type": "image/jpeg",
+            },
+          });
+          const fileUri = FileSystem.cacheDirectory + profileFileName;
+          const { uri } = await FileSystem.downloadAsync(response.url, fileUri);
+          setFieldValue("profileImageUri", uri);
         }
       } catch (error) {
         console.log("Error when loading data from profile: ", error);
@@ -107,57 +211,6 @@ const MyProfile = () => {
     }
     fetchData();
   }, []);
-
-  const convertAwsDateToLocaleDateString = (dateString) => {
-    const parts = dateString.split("-");
-    const year = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1; // Los meses en JavaScript son indexados desde 0, por lo que restamos 1
-    const day = parseInt(parts[2]);
-
-    return new Date(year, month, day).toLocaleDateString();
-  };
-
-  const handleDateChange = (event, selectedDate) => {
-    const timezoneOffsetInMinutes = new Date().getTimezoneOffset();
-    const adjustedDate = new Date(
-      selectedDate.getTime() - timezoneOffsetInMinutes * 60000
-    );
-    setShowDatePicker(Platform.OS === "ios");
-    //console.log("selectedDate: ", adjustedDate.toLocaleDateString());
-    //console.log("current dateOfBirth: ", dateOfBirth.toLocaleDateString());
-    //console.log("current dbUser.birthday: ", dbUser.birthday);
-    const dbBirthday = convertAwsDateToLocaleDateString(dbUser.birthday);
-    console.log(
-      `adjustedDated - ${adjustedDate.toLocaleDateString()} - dbBirthday - ${
-        dbUser.birthday
-      }`
-    );
-    if (adjustedDate.toLocaleDateString() !== dbBirthday) {
-      console.log("dateOfBirth when date changed: ", dateOfBirth);
-
-      setIsDateOfBirthChanged(true);
-    } else {
-      setIsDateOfBirthChanged(false);
-    }
-    setDateOfBirth(adjustedDate);
-  };
-
-  const showMode = () => {
-    setShowDatePicker(true);
-  };
-
-  const handleTextChange = (text) => {
-    if (text !== dbUser.name) {
-      //console.log("fullName when text changed: ", dbUser.name);
-      //console.log("text when text changed: ", text);
-      setIsFullNameChanged(true);
-    } else {
-      //console.log("fullName when text not-changed: ", dbUser.name);
-      //console.log("text when text not-changed: ", text);
-      setIsFullNameChanged(false);
-    }
-    setFullName(text);
-  };
 
   const pickImageFromGallery = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -178,157 +231,180 @@ const MyProfile = () => {
     });
 
     if (!result.canceled) {
-      console.log("Loaded image uri: ", result.assets[0]);
-      setIsProfileImageChanged(true);
-      setProfileImage(result.assets[0]);
+      //copy file from image picker cache folder to cache folder
+      let toFolder = FileSystem.cacheDirectory + `profile-${identityId}.jpeg`;
+      await FileSystem.copyAsync({
+        from: result.assets[0].uri,
+        to: toFolder,
+      })
+        .then(() => {
+          setFieldValue("profileImageUri", toFolder);
+          setImageVersion((prevVersion) => prevVersion + 1);
+          setImageTimestamp(Date.now());
+          setIsProfileImageChanged(true);
+        })
+        .catch((error) => {
+          console.log(
+            "Error when copying from image picker folder to cache folder: ",
+            error
+          );
+        });
     }
   };
 
-  const setLoading = (progress) => {
-    const calculated = parseInt((progress.loaded / progress.total) * 100);
-    updatePercentage(calculated); // due to s3 put function scoped
-  };
-
-  const updatePercentage = (number) => {
-    setPercentage(number);
-  };
-
-  const uploadImage = async (filename, img) => {
-    await Auth.currentCredentials();
-    try {
-      //code to put a file in s3 bucket
-      const response = await Storage.put(filename, img, {
-        level: "private",
-        contentType: "image/jpeg",
-        progressCallback(progress) {
-          console.log(`Uploaded: ${progress.loaded}/${progress.total}`);
-          setLoading(progress);
-        },
-      });
-      console.log("successful load of photo in S3: ", response);
-      const url = await Storage.get(response.key);
-      return url;
-    } catch (error) {
-      console.log("error while uploading image to s3: ", error);
-      return error.response;
+  const handleFullNameChange = (text) => {
+    setLocalFullName(text);
+    if (text !== dbUser.name) {
+      setFieldValue("fullName", text);
+      setIsFullNameChanged(true);
+    } else {
+      setIsFullNameChanged(false);
     }
   };
 
-  const updateProfile = async () => {
+  const showMode = () => {
+    setShowDatePicker(true);
+  };
+
+  const handleDateChange = (event, selectedDate) => {
     try {
-      let update = false;
-      let s3Url;
-      if (profileImage && isProfileImageChanged) {
-        console.log("profileImage when updatingProfile: ", profileImage);
-        const response = await fetch(profileImage.uri);
-        const blob = await response.blob();
-
-        const fileName = `profile-${identityId}.jpeg`;
-        console.log("fileName of profileImage: ", fileName);
-
-        s3Url = await uploadImage(fileName, blob);
-        update = true;
-      }
-
-      //update existing AppUser in DB
-      if (dbUser && (isFullNameChanged || isDateOfBirthChanged)) {
-        console.log("dbUser: ", dbUser);
-        const userUpdated = await DataStore.save(
-          AppUser.copyOf(dbUser, (updated) => {
-            updated.name = fullName;
-            updated.dateOfBirth = dateOfBirth.toISOString().slice(0, 10);
-            return updated;
-          })
+      selectedDate.setHours(0, 0, 0, 0);
+      setShowDatePicker(Platform.OS === "ios");
+      if (event.type === "set") {
+        let dbDate = new Date(dbUser.birthday);
+        dbDate.setHours(24, 0, 0, 0);
+        let dbDateString = dbDate.toLocaleDateString();
+        let selDate = selectedDate.toLocaleDateString();
+        console.log(
+          `selected date - "${selDate}" vs. dbBirthday - "${dbDateString}"`
         );
-        console.log("userUpdated: ", userUpdated);
-        update = true;
-      }
-
-      if (update) {
-        Alert.alert("Success", "Profile updated successfully!");
-      } else {
-        Alert.alert("Info", "Profile not updated!");
+        if (selDate !== dbDateString) {
+          setFieldValue("dateOfBirth", selectedDate);
+          setLocalBirthday(selectedDate);
+          setIsDateOfBirthChanged(true);
+        } else {
+          setIsDateOfBirthChanged(false);
+        }
       }
     } catch (error) {
-      console.log(`Error occurred while updating profile: `, error);
-      Alert.alert("Error", "Failed to update profile. Please try again.");
+      console.log("Error when handling date change: ", error);
     }
   };
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+      style={styles.mainContainer}
     >
       <CustomHeader />
-      <View style={styles.content}>
-        <Text style={styles.welcomeText}>Hi {fullName}!</Text>
-        {percentage !== 0 && (
-          <Text style={styles.percentage}>{percentage}%</Text>
-        )}
-        {downloadedImageUri ? (
-          <Image
-            source={{ uri: downloadedImageUri }}
-            style={styles.profileImage}
-          />
-        ) : (
-          <Text style={styles.profileImagePlaceholder}>
-            Update image profile
-          </Text>
-        )}
-        <TouchableOpacity style={styles.button} onPress={pickImageFromGallery}>
-          <Text style={styles.buttonText}>Update image</Text>
-        </TouchableOpacity>
-        <View style={styles.dateOfBirthContainer}>
-          <Ionicons
-            name="person-circle"
-            size={24}
-            color="black"
-            style={styles.icon}
-          />
-          <Text style={styles.dateOfBirthLabel}>Alias</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Preferred Name"
-            value={fullName}
-            onChangeText={(text) => handleTextChange(text)}
-          />
-        </View>
-        <TouchableWithoutFeedback onPress={showMode}>
+      <ScrollView
+        contentContainerStyle={styles.contentContainer}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.content}>
+          <Text style={styles.welcomeText}>Hi {localFullName}!</Text>
+          {percentage !== 0 && (
+            <Text style={styles.percentage}>{percentage}%</Text>
+          )}
+          {values.profileImageUri !== "" ? (
+            <Image
+              key={imageVersion}
+              source={{
+                uri: `${values.profileImageUri}?t=${imageTimestamp}`,
+                cache: "reload",
+              }}
+              style={styles.profileImage}
+            />
+          ) : (
+            <Image
+              source={require("../../assets/neutral.png")}
+              style={styles.profileImage}
+            />
+          )}
+          <TouchableOpacity
+            style={styles.buttonUpdateImage}
+            onPress={pickImageFromGallery}
+          >
+            <Text style={styles.buttonTextUpdateImage}>Update image</Text>
+          </TouchableOpacity>
+          {touched.fullName && errors.fullName && (
+            <Text style={styles.errorText}>{errors.fullName}</Text>
+          )}
           <View style={styles.dateOfBirthContainer}>
             <Ionicons
-              name="calendar"
+              name="person-circle"
               size={24}
               color="black"
               style={styles.icon}
             />
-            <Text style={styles.dateOfBirthLabel}>Birthday</Text>
-            <Text style={styles.dateOfBirthText}>
-              {dateOfBirth.toLocaleDateString()}
-            </Text>
+            <Text style={styles.dateOfBirthLabel}>Alias</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Preferred Name"
+              value={localFullName}
+              onChangeText={(text) => {
+                handleChange("fullName", text);
+                handleFullNameChange(text);
+              }}
+            />
           </View>
-        </TouchableWithoutFeedback>
-        {showDatePicker && (
-          <DateTimePicker
-            value={dateOfBirth}
-            mode="date"
-            display="default"
-            dateFormat="dayofweek day month"
-            onChange={handleDateChange}
-          />
-        )}
-        <TouchableOpacity style={styles.button} onPress={updateProfile}>
-          <Text style={styles.buttonText}>Update</Text>
-        </TouchableOpacity>
-      </View>
+          {touched.dateOfBirth && errors.dateOfBirth && (
+            <Text style={styles.errorText}>{errors.dateOfBirth}</Text>
+          )}
+          <TouchableWithoutFeedback onPress={showMode}>
+            <View style={styles.dateOfBirthContainer}>
+              <Ionicons
+                name="calendar"
+                size={24}
+                color="black"
+                style={styles.icon}
+              />
+              <Text style={styles.dateOfBirthLabel}>Birthday</Text>
+              <Text style={styles.dateOfBirthText}>
+                {localBirthday.toLocaleDateString()}
+              </Text>
+            </View>
+          </TouchableWithoutFeedback>
+          {showDatePicker && (
+            <DateTimePicker
+              value={localBirthday}
+              mode="date"
+              display="default"
+              dateFormat="dayofweek day month"
+              onChange={handleDateChange}
+            />
+          )}
+          <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+            <Text style={styles.buttonText}>Update</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
+export default MyProfile;
+
 const styles = StyleSheet.create({
+  mainContainer: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#fcf6db",
+  },
   container: {
     flex: 1,
+    backgroundColor: "#fcf6db",
+    width: "100%",
+  },
+  contentContainer: {
+    flexGrow: 1,
+  },
+  content: {
+    flex: 1,
+    paddingTop: 20,
+    alignItems: "center",
   },
   welcomeText: {
     fontSize: 24,
@@ -345,31 +421,25 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 20,
   },
-  button: {
-    backgroundColor: "#8a9c45",
+  buttonUpdateImage: {
+    backgroundColor: "#FFFFFF",
     padding: 10,
     borderRadius: 5,
     marginBottom: 30,
   },
-  buttonText: {
-    color: "#FFFFFF",
+  buttonTextUpdateImage: {
+    color: "#8a9c45",
     fontSize: 16,
-    fontWeight: "bold",
-  },
-  input: {
-    width: "61%", // Ajusta el ancho del TextInput al 80% del contenedor
-    height: 40,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 4,
-    marginBottom: 16,
-    paddingHorizontal: 8,
-    backgroundColor: "#fff", // Establece el color de fondo a blanco
+    fontWeight: "normal",
   },
   dateOfBirthContainer: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 10,
+  },
+  icon: {
+    marginRight: 5,
+    marginBottom: 16,
   },
   dateOfBirthLabel: {
     marginRight: 5,
@@ -387,16 +457,28 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     verticalAlign: "middle",
   },
-  icon: {
-    marginRight: 5,
+  input: {
+    width: "61%",
+    height: 40,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 4,
     marginBottom: 16,
+    paddingHorizontal: 8,
+    backgroundColor: "#fff",
   },
-  content: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#fcf6db",
+  errorText: {
+    color: "red",
+  },
+  button: {
+    backgroundColor: "#8a9c45",
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 30,
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
-
-export default MyProfile;

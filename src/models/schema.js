@@ -122,10 +122,10 @@ export const schema = {
                     "isRequired": false,
                     "attributes": []
                 },
-                "s3UrlPath": {
-                    "name": "s3UrlPath",
+                "s3Key": {
+                    "name": "s3Key",
                     "isArray": false,
-                    "type": "AWSURL",
+                    "type": "String",
                     "isRequired": false,
                     "attributes": []
                 },
@@ -229,5 +229,5 @@ export const schema = {
     "enums": {},
     "nonModels": {},
     "codegenVersion": "3.4.3",
-    "version": "9fadd88d81ee65bcded14dcf3f8bc6b1"
+    "version": "83fc42abc53b213ebf421fb3a9f01452"
 };

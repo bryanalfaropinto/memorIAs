@@ -8,6 +8,7 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import * as WebBrowser from "expo-web-browser";
@@ -48,9 +49,12 @@ const Home = () => {
   const [password, setPassword] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [isWaitingConfirmation, setIsWaitingConfirmation] = useState(false);
+  const [isWaitingVerificationCode, setIsWaitingVerificationCode] =
+    useState(false);
+  // const [cognitoId, setCognitoId] = useState("");
+  // const [dbUser, setDbUser] = useState(null);
+  const [isDataStoreReady, setIsDataStoreReady] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [isGoogleSignIn, setIsGoogleSignIn] = useState(false);
-  const [isCognitoSignIn, setIsCognitoSignIn] = useState(false);
 
   const { setIsInitialRegistration } = useContext(AppContext);
 
@@ -106,78 +110,80 @@ const Home = () => {
     }
   };
 
-  useEffect(() => {
-    const unsubscribe = Hub.listen("auth", ({ payload: { event, data } }) => {
-      console.log("event", event);
-      switch (event) {
-        case "signIn":
-          setUserData(data);
-          if (data.username.startsWith("google_")) {
-            console.log("Google sign in");
-            setIsGoogleSignIn(true);
-          } else {
-            console.log("Cognito sign in");
-            setIsCognitoSignIn(true);
-          }
-          navigation.navigate("Entry");
-          break;
-        case "signOut":
-          setUserData(null);
-          setCustomState(null);
-          setUsername("");
-          setEmail("");
-          setPassword("");
-          setErrorMessage("");
-          setIsSignUp(false);
-          setIsWaitingConfirmation(false);
-          console.log("Logged out successfully");
-          navigation.navigate("Home");
-          break;
-        case "customOAuthState":
-          setCustomState(data);
-          break;
-        case "signUp":
-          setUserData(null);
-          setIsWaitingConfirmation(true);
-          break;
-        case "confirmSignUp":
-          setIsWaitingConfirmation(false);
-          navigation.navigate("Entry");
-          break;
-        case "signIn_failure":
-          setErrorMessage(data.message);
-          break;
-      }
-    });
-
-    Auth.currentAuthenticatedUser()
-      .then((currentUser) => setUserData(currentUser))
-      .catch(() => console.log("Not signed in"));
-
-    return unsubscribe;
-  }, []);
-
-  const handleForgotPassword = async () => {
+  const queryUserByUserName = async (data) => {
     try {
-      await Auth.forgotPassword(email);
-      console.log("Forgot password email sent");
+      //console.log("DataStore configured. UserData: ", userData);
+      if (data.username.startsWith("google_")) {
+        console.log("Google sign in");
+        //setCognitoId(data.signInUserSession.accessToken.payload.sub);
+        await queryAppUserByCognitoId(
+          data.signInUserSession.accessToken.payload.sub
+        );
+        navigation.navigate("Entry");
+      } else {
+        console.log("Cognito sign in");
+        //setCognitoId(data.attributes.sub);
+        await queryAppUserByCognitoId(data.attributes.sub);
+        navigation.navigate("Entry");
+      }
     } catch (error) {
-      console.log("Error sending forgot password email:", error);
+      console.log("Error querying user by user name: ", error);
     }
+  };
+
+  useEffect(() => {
+    if (userData && isDataStoreReady) {
+      //console.log("useEffect: userData: ", userData);
+      queryUserByUserName(userData);
+    }
+  }, [userData, isDataStoreReady]);
+
+  const handleSignInEvent = async (data) => {
+    try {
+      // configure DataStore
+      setUserData(data);
+
+      await DataStore.clear();
+      await DataStore.configure(); //syncExpressions can be added later when needed (Audios from User)
+      await DataStore.start();
+    } catch (error) {
+      console.log("Error event after signing in: ", error);
+    }
+  };
+
+  const handleSignOutEvent = async () => {
+    setUserData(null);
+    setCustomState(null);
+    setUsername("");
+    setEmail("");
+    setPassword("");
+    setErrorMessage("");
+    setIsSignUp(false);
+    setIsWaitingConfirmation(false);
+    setIsDataStoreReady(false);
+    console.log("Logged out successfully");
+    try {
+      await DataStore.clear();
+      await DataStore.stop();
+      console.log("DataStore cleared");
+    } catch (error) {
+      console.log("Error clearing DataStore: ", error);
+    }
+    navigation.navigate("Home");
   };
 
   const queryAppUserByCognitoId = async (cognitoId) => {
     const models = await DataStore.query(AppUser, (user) =>
-      user.and((user) => [
-        user.cognitoId.eq(cognitoId)
-      ])
+      user.and((user) => [user.cognitoId.eq(cognitoId)])
     )
       .then((users) => {
         if (users.length === 0) {
           console.log(`User ${cognitoId} not found in database yet`);
+          //setDbUser(null);
           setIsInitialRegistration(true);
         } else {
           console.log(`User ${cognitoId} found in database`);
+          //setDbUser(users[0]);
           setIsInitialRegistration(false);
         }
       })
@@ -189,20 +195,87 @@ const Home = () => {
     return models;
   };
 
-  //retrieve user from database (AppUser model) using DataStore and a query by cognitoId field
+  const handleDataStoreReadyEvent = async () => {
+    console.log("DataStore configured");
+    setIsDataStoreReady(true);
+  };
+
   useEffect(() => {
-    if (userData) {
-      //console.log("userData Home: ", userData);
-      if (isCognitoSignIn) {
-        queryAppUserByCognitoId(userData.attributes.sub);
-      }
-      else {
-        if (isGoogleSignIn) {
-          queryAppUserByCognitoId(userData.signInUserSession.accessToken.payload.sub);
+    const unsubscribeAuth = Hub.listen(
+      "auth",
+      ({ payload: { event, data } }) => {
+        //handle auth events
+        console.log("event auth: ", event);
+        switch (event) {
+          case "signIn":
+            handleSignInEvent(data);
+            break;
+          case "signOut":
+            handleSignOutEvent();
+            break;
+          case "customOAuthState":
+            setCustomState(data);
+            break;
+          case "signUp":
+            setUserData(null);
+            setIsWaitingConfirmation(true);
+            break;
+          case "confirmSignUp":
+            setIsWaitingConfirmation(false);
+            navigation.navigate("Entry");
+            break;
+          case "signIn_failure":
+            setErrorMessage(data.message);
+            break;
+          case "forgotPassword":
+            setIsWaitingVerificationCode(true);
+            break;
+          case "forgotPasswordSubmit":
+            Alert.alert("Success", "Password reset successfully!");
+            setIsWaitingVerificationCode(false);
+            setPassword("");
+            setVerificationCode("");
+            break;
         }
       }
+    );
+
+    const unsubscribeDataStore = Hub.listen("datastore", async (hubData) => {
+      const { event, data } = hubData.payload;
+      //console.log("data: ", data);
+      let modelName = "";
+      if (data) {
+        const { model } = data;
+        if (model) {
+          modelName = model.name;
+          //console.log(`event datastore "${event}" on model "${data.model.name}": `);
+        }
+      }
+      if (event === "modelSynced" && modelName === "AppUser") {
+        handleDataStoreReadyEvent();
+      }
+    });
+
+    Auth.currentAuthenticatedUser()
+      .then((currentUser) => setUserData(currentUser))
+      .catch(() => console.log("Not signed in"));
+
+    return () => {
+      unsubscribeAuth();
+      unsubscribeDataStore();
+    };
+  }, []);
+
+  const handleForgotPassword = async () => {
+    try {
+      await Auth.forgotPassword(username);
+      setErrorMessage("");
+      console.log("Forgot password email sent");
+    } catch (error) {
+      setErrorMessage(error.message);
+      console.log("Error sending forgot password email:", error);
     }
-  }, [userData]);
+  };
 
   const renderSignUpForm = () => {
     if (isWaitingConfirmation) {
@@ -261,7 +334,50 @@ const Home = () => {
     );
   };
 
+  const handlePasswordVerification = async () => {
+    try {
+      await Auth.forgotPasswordSubmit(username, verificationCode, password);
+      setErrorMessage("");
+    } catch (error) {
+      console.log(
+        "Error confirming verification code and new password:",
+        error
+      );
+      setErrorMessage(error.message);
+    }
+  };
+
   const renderSignInForm = () => {
+    if (isWaitingVerificationCode) {
+      return (
+        <View style={styles.formContainer}>
+          <Text style={styles.verificationText}>
+            Please check your email for verification code and enter it here
+            along with new password.
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Verification Code"
+            value={verificationCode}
+            onChangeText={(code) => setVerificationCode(code)}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="New Password"
+            secureTextEntry
+            value={password}
+            onChangeText={(pwd) => setPassword(pwd)}
+          />
+          <TouchableOpacity
+            style={styles.loginButtonStyle}
+            onPress={handlePasswordVerification}
+          >
+            <Text style={styles.loginButtonText}>Confirm</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
     return (
       <View style={styles.formContainer}>
         <TextInput
@@ -289,13 +405,22 @@ const Home = () => {
             <Text style={styles.linkText}>Sign Up</Text>
           </View>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.linkText}
+          onPress={handleForgotPassword}
+        >
+          <View style={styles.inlineContainer}>
+            <Text>Forgot your </Text>
+            <Text style={styles.linkText}>Password?</Text>
+          </View>
+        </TouchableOpacity>
       </View>
     );
   };
 
   return (
     <View style={styles.container}>
-      {userData && <Text>{userData.username}</Text>}
+      {/* {userData && <Text>{userData.username}</Text>} */}
 
       <Image
         source={require("../../assets/LogoMemorias.png")}

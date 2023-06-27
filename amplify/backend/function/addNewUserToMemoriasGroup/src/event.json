@@ -2,7 +2,7 @@
   "version": "1",
   "region": "us-east-1",
   "userPoolId": "us-east-1_nqD4z84GY",
-  "userName": "c76dfaa4-e65a-43b3-a5c1-3d2d558d907f",
+  "userName": "c9d2aac8-2680-425f-b1a7-8083e88f4254",
   "callerContext": {
       "awsSdkVersion": "aws-sdk-unknown-unknown",
       "clientId": "64uipf31sefp4p224u4dcq426q"
@@ -10,7 +10,7 @@
   "triggerSource": "PostConfirmation_ConfirmSignUp",
   "request": {
       "userAttributes": {
-          "sub": "c76dfaa4-e65a-43b3-a5c1-3d2d558d907f",
+          "sub": "c9d2aac8-2680-425f-b1a7-8083e88f4254",
           "email_verified": "true",
           "cognito:user_status": "CONFIRMED",
           "cognito:email_alias": "baap.ucp@gmail.com",
