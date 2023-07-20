@@ -1,0 +1,388 @@
+{
+    '$metadata': {
+      httpStatusCode: 200,
+      requestId: undefined,
+      extendedRequestId: '3dI0MfQ3JC8eWDrL2e/9xGpEmtlQsuM59TuTUWwG6ecUa5251GZ7k/9ThkkTiFV81WobkmTXH54=',
+      cfId: undefined,
+      attempts: 1,
+      totalRetryDelay: 0
+    },
+    AcceptRanges: 'bytes',
+    Body: <ref *1> IncomingMessage {
+      _readableState: ReadableState {
+        objectMode: false,
+        highWaterMark: 16384,
+        buffer: BufferList { head: null, tail: null, length: 0
+            },
+        length: 0,
+        pipes: [],
+        flowing: null,
+        ended: false,
+        endEmitted: false,
+        reading: false,
+        constructed: true,
+        sync: true,
+        needReadable: false,
+        emittedReadable: false,
+        readableListening: false,
+        resumeScheduled: false,
+        errorEmitted: false,
+        emitClose: true,
+        autoDestroy: true,
+        destroyed: false,
+        errored: null,
+        closed: false,
+        closeEmitted: false,
+        defaultEncoding: 'utf8',
+        awaitDrainWriters: null,
+        multiAwaitDrain: false,
+        readingMore: true,
+        dataEmitted: false,
+        decoder: null,
+        encoding: null,
+            [Symbol(kPaused)
+            ]: null
+        },
+      _events: [Object: null prototype
+        ] { end: [Function: responseOnEnd
+            ]
+        },
+      _eventsCount: 1,
+      _maxListeners: undefined,
+      socket: TLSSocket {
+        _tlsOptions: [Object
+            ],
+        _secureEstablished: true,
+        _securePending: false,
+        _newSessionPending: false,
+        _controlReleased: true,
+        secureConnecting: false,
+        _SNICallback: null,
+        servername: 'memorias-storage-0206a16603328-dev.s3.us-east-1.amazonaws.com',
+        alpnProtocol: false,
+        authorized: true,
+        authorizationError: null,
+        encrypted: true,
+        _events: [Object: null prototype
+            ],
+        _eventsCount: 11,
+        connecting: false,
+        _hadError: false,
+        _parent: null,
+        _host: 'memorias-storage-0206a16603328-dev.s3.us-east-1.amazonaws.com',
+        _closeAfterHandlingError: false,
+        _readableState: [ReadableState
+            ],
+        _maxListeners: undefined,
+        _writableState: [WritableState
+            ],
+        allowHalfOpen: false,
+        _sockname: null,
+        _pendingData: null,
+        _pendingEncoding: '',
+        server: undefined,
+        _server: null,
+        ssl: [TLSWrap
+            ],
+        _requestCert: true,
+        _rejectUnauthorized: true,
+        parser: [HTTPParser
+            ],
+        _httpMessage: [ClientRequest
+            ],
+        timeout: 0,
+            [Symbol(res)
+            ]: [TLSWrap
+            ],
+            [Symbol(verified)
+            ]: true,
+            [Symbol(pendingSession)
+            ]: null,
+            [Symbol(async_id_symbol)
+            ]: 56,
+            [Symbol(kHandle)
+            ]: [TLSWrap
+            ],
+            [Symbol(lastWriteQueueSize)
+            ]: 0,
+            [Symbol(timeout)
+            ]: null,
+            [Symbol(kBuffer)
+            ]: null,
+            [Symbol(kBufferCb)
+            ]: null,
+            [Symbol(kBufferGen)
+            ]: null,
+            [Symbol(kCapture)
+            ]: false,
+            [Symbol(kSetNoDelay)
+            ]: false,
+            [Symbol(kSetKeepAlive)
+            ]: false,
+            [Symbol(kSetKeepAliveInitialDelay)
+            ]: 0,
+            [Symbol(kBytesRead)
+            ]: 0,
+            [Symbol(kBytesWritten)
+            ]: 0,
+            [Symbol(connect-options)
+            ]: [Object
+            ]
+        },
+      httpVersionMajor: 1,
+      httpVersionMinor: 1,
+      httpVersion: '1.1',
+      complete: false,
+      rawHeaders: [
+        'x-amz-id-2',
+        '3dI0MfQ3JC8eWDrL2e/9xGpEmtlQsuM59TuTUWwG6ecUa5251GZ7k/9ThkkTiFV81WobkmTXH54=',
+        'x-amz-request-id',
+        '307M9AFDEMNMXT6B',
+        'Date',
+        'Tue,
+            04 Jul 2023 18: 39: 12 GMT',
+        'Last-Modified',
+        'Tue,
+            04 Jul 2023 17: 43: 19 GMT',
+        'ETag',
+        '"ab097320171989a027c9b99d1f4598bf"',
+        'x-amz-server-side-encryption',
+        'AES256',
+        'x-amz-version-id',
+        'xBs2BYmHRuaEYsSSXzHq5m8miDBhZWjf',
+        'Accept-Ranges',
+        'bytes',
+        'Content-Type',
+        'audio/mpeg',
+        'Server',
+        'AmazonS3',
+        'Content-Length',
+        '43133'
+        ],
+      rawTrailers: [],
+      joinDuplicateHeaders: undefined,
+      aborted: false,
+      upgrade: false,
+      url: '',
+      method: null,
+      statusCode: 200,
+      statusMessage: 'OK',
+      client: TLSSocket {
+        _tlsOptions: [Object
+            ],
+        _secureEstablished: true,
+        _securePending: false,
+        _newSessionPending: false,
+        _controlReleased: true,
+        secureConnecting: false,
+        _SNICallback: null,
+        servername: 'memorias-storage-0206a16603328-dev.s3.us-east-1.amazonaws.com',
+        alpnProtocol: false,
+        authorized: true,
+        authorizationError: null,
+        encrypted: true,
+        _events: [Object: null prototype
+            ],
+        _eventsCount: 11,
+        connecting: false,
+        _hadError: false,
+        _parent: null,
+        _host: 'memorias-storage-0206a16603328-dev.s3.us-east-1.amazonaws.com',
+        _closeAfterHandlingError: false,
+        _readableState: [ReadableState
+            ],
+        _maxListeners: undefined,
+        _writableState: [WritableState
+            ],
+        allowHalfOpen: false,
+        _sockname: null,
+        _pendingData: null,
+        _pendingEncoding: '',
+        server: undefined,
+        _server: null,
+        ssl: [TLSWrap
+            ],
+        _requestCert: true,
+        _rejectUnauthorized: true,
+        parser: [HTTPParser
+            ],
+        _httpMessage: [ClientRequest
+            ],
+        timeout: 0,
+            [Symbol(res)
+            ]: [TLSWrap
+            ],
+            [Symbol(verified)
+            ]: true,
+            [Symbol(pendingSession)
+            ]: null,
+            [Symbol(async_id_symbol)
+            ]: 56,
+            [Symbol(kHandle)
+            ]: [TLSWrap
+            ],
+            [Symbol(lastWriteQueueSize)
+            ]: 0,
+            [Symbol(timeout)
+            ]: null,
+            [Symbol(kBuffer)
+            ]: null,
+            [Symbol(kBufferCb)
+            ]: null,
+            [Symbol(kBufferGen)
+            ]: null,
+            [Symbol(kCapture)
+            ]: false,
+            [Symbol(kSetNoDelay)
+            ]: false,
+            [Symbol(kSetKeepAlive)
+            ]: false,
+            [Symbol(kSetKeepAliveInitialDelay)
+            ]: 0,
+            [Symbol(kBytesRead)
+            ]: 0,
+            [Symbol(kBytesWritten)
+            ]: 0,
+            [Symbol(connect-options)
+            ]: [Object
+            ]
+        },
+      _consuming: false,
+      _dumped: false,
+      req: ClientRequest {
+        _events: [Object: null prototype
+            ],
+        _eventsCount: 4,
+        _maxListeners: undefined,
+        outputData: [],
+        outputSize: 0,
+        writable: true,
+        destroyed: false,
+        _last: true,
+        chunkedEncoding: false,
+        shouldKeepAlive: true,
+        maxRequestsOnConnectionReached: false,
+        _defaultKeepAlive: true,
+        useChunkedEncodingByDefault: false,
+        sendDate: false,
+        _removedConnection: false,
+        _removedContLen: false,
+        _removedTE: false,
+        strictContentLength: false,
+        _contentLength: 0,
+        _hasBody: true,
+        _trailer: '',
+        finished: true,
+        _headerSent: true,
+        _closed: false,
+        socket: [TLSSocket
+            ],
+        _header: 'GET /private/us-east-1%3A7ce737f6-1373-4b93-a4c2-cbf72b697202/audios/4Julio2023_1.m4a?x-id=GetObject HTTP/1.1\r\n' +
+          'host: memorias-storage-0206a16603328-dev.s3.us-east-1.amazonaws.com\r\n' +
+          'x-amz-user-agent: aws-sdk-js/3.6.2 os/win32/10.0.19045 lang/js md/nodejs/18.15.0 api/s3/3.6.2 exec-env/AWS_Lambda_amplify-mock\r\n' +
+          'user-agent: aws-sdk-js/3.6.2\r\n' +
+          'amz-sdk-invocation-id: 33f13167-eb86-47f9-9a95-5b356ab3d40b\r\n' +
+          'amz-sdk-request: attempt=1; max=3\r\n' +
+          'x-amz-date: 20230704T183910Z\r\n' +
+          'x-amz-content-sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\r\n' +
+          'authorization: AWS4-HMAC-SHA256 Credential=AKIAWGFHB72HUBCS2DPE/20230704/us-east-1/s3/aws4_request, SignedHeaders=amz-sdk-invocation-id;amz-sdk-request;host;x-amz-content-sha256;x-amz-date;x-amz-user-agent, Signature=40149b49b5bd8ae99e9f97c965d4a10f9f1c5b9a3efb1230a276dec693a6b0bf\r\n' +
+          'Connection: keep-alive\r\n' +
+          '\r\n',
+        _keepAliveTimeout: 0,
+        _onPendingData: [Function: nop
+            ],
+        agent: [Agent
+            ],
+        socketPath: undefined,
+        method: 'GET',
+        maxHeaderSize: undefined,
+        insecureHTTPParser: undefined,
+        joinDuplicateHeaders: undefined,
+        path: '/private/us-east-1%3A7ce737f6-1373-4b93-a4c2-cbf72b697202/audios/4Julio2023_1.m4a?x-id=GetObject',
+        _ended: false,
+        res: [Circular *1
+            ],
+        aborted: false,
+        timeoutCb: [Function: emitRequestTimeout
+            ],
+        upgradeOrConnect: false,
+        parser: [HTTPParser
+            ],
+        maxHeadersCount: null,
+        reusedSocket: false,
+        host: 'memorias-storage-0206a16603328-dev.s3.us-east-1.amazonaws.com',
+        protocol: 'https:',
+            [Symbol(kCapture)
+            ]: false,
+            [Symbol(kBytesWritten)
+            ]: 0,
+            [Symbol(kEndCalled)
+            ]: true,
+            [Symbol(kNeedDrain)
+            ]: false,
+            [Symbol(corked)
+            ]: 0,
+            [Symbol(kOutHeaders)
+            ]: [Object: null prototype
+            ],
+            [Symbol(errored)
+            ]: null,
+            [Symbol(kUniqueHeaders)
+            ]: null
+        },
+        [Symbol(kCapture)
+        ]: false,
+        [Symbol(kHeaders)
+        ]: {
+        'x-amz-id-2': '3dI0MfQ3JC8eWDrL2e/9xGpEmtlQsuM59TuTUWwG6ecUa5251GZ7k/9ThkkTiFV81WobkmTXH54=',
+        'x-amz-request-id': '307M9AFDEMNMXT6B',
+        date: 'Tue,
+            04 Jul 2023 18: 39: 12 GMT',
+        'last-modified': 'Tue,
+            04 Jul 2023 17: 43: 19 GMT',
+        etag: '"ab097320171989a027c9b99d1f4598bf"',
+        'x-amz-server-side-encryption': 'AES256',
+        'x-amz-version-id': 'xBs2BYmHRuaEYsSSXzHq5m8miDBhZWjf',
+        'accept-ranges': 'bytes',
+        'content-type': 'audio/mpeg',
+        server: 'AmazonS3',
+        'content-length': '43133'
+        },
+        [Symbol(kHeadersCount)
+        ]: 22,
+        [Symbol(kTrailers)
+        ]: null,
+        [Symbol(kTrailersCount)
+        ]: 0
+    },
+    BucketKeyEnabled: undefined,
+    CacheControl: undefined,
+    ContentDisposition: undefined,
+    ContentEncoding: undefined,
+    ContentLanguage: undefined,
+    ContentLength: 43133,
+    ContentRange: undefined,
+    ContentType: 'audio/mpeg',
+    DeleteMarker: undefined,
+    ETag: '"ab097320171989a027c9b99d1f4598bf"',
+    Expiration: undefined,
+    Expires: undefined,
+    LastModified: 2023-07-04T17: 43: 19.000Z,
+    Metadata: {},
+    MissingMeta: undefined,
+    ObjectLockLegalHoldStatus: undefined,
+    ObjectLockMode: undefined,
+    ObjectLockRetainUntilDate: undefined,
+    PartsCount: undefined,
+    ReplicationStatus: undefined,
+    RequestCharged: undefined,
+    Restore: undefined,
+    SSECustomerAlgorithm: undefined,
+    SSECustomerKeyMD5: undefined,
+    SSEKMSKeyId: undefined,
+    ServerSideEncryption: 'AES256',
+    StorageClass: undefined,
+    TagCount: undefined,
+    VersionId: 'xBs2BYmHRuaEYsSSXzHq5m8miDBhZWjf',
+    WebsiteRedirectLocation: undefined
+}

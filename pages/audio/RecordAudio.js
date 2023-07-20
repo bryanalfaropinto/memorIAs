@@ -77,8 +77,11 @@ const RecordAudio = () => {
         },
       });
       console.log("successful load of audio file in S3: ", response); //key
+      const { id } = await Auth.currentUserInfo();
       const url = await Storage.get(response.key);
+      //console.log("presigned url in S3: ", url);
       const data = {
+        CognitoId: id,
         Key: response.key,
         S3Url: url,
         Success: true,
@@ -146,7 +149,7 @@ const RecordAudio = () => {
     try {
       let upload1Success = false;
       //code to put a file in s3 bucket
-      const s3AudioFolder = "audios/";
+      const s3AudioFolder = "audios";
       const audioName = fileUri.split("/").pop();
       //console.log("Audio name: ", audioName);
       const audioType = audioName.split(".").pop();
@@ -160,8 +163,10 @@ const RecordAudio = () => {
       //console.log("response when uploading to cloud: ", response);
       const blob = await response.blob();
       //console.log("Blob uploading: ", blob);
-      const s3FileName = s3AudioFolder + audioName;
-      //console.log("s3FileName: ", s3FileName);
+      const timestamp = new Date().getTime().toString();
+      const audioSubFolder = `${audioName.slice(0, audioName.lastIndexOf("."))}_${timestamp}`;
+      const s3FileName = `${s3AudioFolder}/${audioSubFolder}/${audioName}`;
+      console.log("s3FileName: ", s3FileName);
       const data1 = await uploadAudioToStorage(s3FileName, blob);
       if (data1.Success) {
         upload1Success = true;
@@ -173,7 +178,7 @@ const RecordAudio = () => {
       const data2 = await uploadAudioToModel(
         fileUri,
         recordingTitle,
-        data1.Key,
+        "private/" + data1.CognitoId + "/" + data1.Key,
         blob.size,
         audioType
       );

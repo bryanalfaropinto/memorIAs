@@ -1,0 +1,111 @@
+{
+    '$metadata': {
+      httpStatusCode: 200,
+      requestId: undefined,
+      extendedRequestId: 'kzyK8Avp2c3TucCCR5RJIzHfTrw6CddJVjSzNPCki5hJzC8Xca6+2QerN9z8RYJejrTAuWvPUSo=',
+      cfId: undefined,
+      attempts: 1,
+      totalRetryDelay: 0
+    },
+    CommonPrefixes: undefined,
+    Contents: [
+        {
+        Key: 'private/',
+        LastModified: 2023-05-31T02: 23: 49.000Z,
+        ETag: '"d41d8cd98f00b204e9800998ecf8427e"',
+        Size: 0,
+        StorageClass: 'STANDARD',
+        Owner: [Object
+            ]
+        },
+        {
+        Key: 'private/us-east-1: 7ce737f6-1373-4b93-a4c2-cbf72b697202/audios/27Junio2023_3.m4a',
+        LastModified: 2023-06-27T17: 17: 14.000Z,
+        ETag: '"0f4c349f3a5177dbd85ea4af26a2d012"',
+        Size: 168559,
+        StorageClass: 'STANDARD',
+        Owner: [Object
+            ]
+        },
+        {
+        Key: 'private/us-east-1: 7ce737f6-1373-4b93-a4c2-cbf72b697202/audios/3Julio2023_1.m4a',
+        LastModified: 2023-07-03T15: 05: 38.000Z,
+        ETag: '"061e2070672f75f34b4443031434377e"',
+        Size: 42520,
+        StorageClass: 'STANDARD',
+        Owner: [Object
+            ]
+        },
+        {
+        Key: 'private/us-east-1: 7ce737f6-1373-4b93-a4c2-cbf72b697202/audios/3Julio2023_2.m4a',
+        LastModified: 2023-07-03T15: 07: 07.000Z,
+        ETag: '"1c6cd90c49d2a452386e53a0fef5ac6c"',
+        Size: 44470,
+        StorageClass: 'STANDARD',
+        Owner: [Object
+            ]
+        },
+        {
+        Key: 'private/us-east-1: 7ce737f6-1373-4b93-a4c2-cbf72b697202/audios/3Julio2023_3.m4a',
+        LastModified: 2023-07-03T16: 19: 05.000Z,
+        ETag: '"d97a59e01b1cd9ce284fa740a7b6762f"',
+        Size: 52551,
+        StorageClass: 'STANDARD',
+        Owner: [Object
+            ]
+        },
+        {
+        Key: 'private/us-east-1: 7ce737f6-1373-4b93-a4c2-cbf72b697202/audios/3Julio2023_4.m4a',
+        LastModified: 2023-07-03T16: 33: 09.000Z,
+        ETag: '"21aca512721785ca2ef2e1e8aa57854e"',
+        Size: 27473,
+        StorageClass: 'STANDARD',
+        Owner: [Object
+            ]
+        },
+        {
+        Key: 'private/us-east-1: 7ce737f6-1373-4b93-a4c2-cbf72b697202/audios/3Julio2023_5.m4a',
+        LastModified: 2023-07-03T17: 15: 36.000Z,
+        ETag: '"d341cd47fadf8d0433b1bc9b26c6848f"',
+        Size: 29702,
+        StorageClass: 'STANDARD',
+        Owner: [Object
+            ]
+        },
+        {
+        Key: 'private/us-east-1: 7ce737f6-1373-4b93-a4c2-cbf72b697202/profile-4f2e7891-b6f6-4270-987b-8337c6f86f4e.jpeg',
+        LastModified: 2023-06-16T22: 43: 42.000Z,
+        ETag: '"55b06d8ed0ef99119dc268a873e7c692"',
+        Size: 71310,
+        StorageClass: 'STANDARD',
+        Owner: [Object
+            ]
+        },
+        {
+        Key: 'private/us-east-1: 958481c4-e737-4748-93dc-7690efe8aadd/audios/memoria1.m4a',
+        LastModified: 2023-06-18T13: 51: 48.000Z,
+        ETag: '"7ad2875bd4ddad6795ccd004f981dd32"',
+        Size: 34039,
+        StorageClass: 'STANDARD',
+        Owner: [Object
+            ]
+        },
+        {
+        Key: 'private/us-east-1: 958481c4-e737-4748-93dc-7690efe8aadd/profile-eb43ba1b-7b2c-4f41-908b-d86b19c77c10.jpeg',
+        LastModified: 2023-06-18T13: 51: 18.000Z,
+        ETag: '"4e3632edbd1686987e0996deac4ac60e"',
+        Size: 585980,
+        StorageClass: 'STANDARD',
+        Owner: [Object
+            ]
+        }
+    ],
+    Delimiter: undefined,
+    EncodingType: undefined,
+    IsTruncated: false,
+    Marker: '',
+    MaxKeys: 1000,
+    Name: 'memorias-storage-0206a16603328-dev',
+    NextMarker: undefined,
+    Prefix: 'private/'
+}

@@ -1,0 +1,68 @@
+{
+    "Records": [
+        {
+            "eventID": "bdcca02377b18ec90bad4ee325987766",
+            "eventName": "INSERT",
+            "eventVersion": "1.1",
+            "eventSource": "aws:dynamodb",
+            "awsRegion": "us-east-1",
+            "dynamodb": {
+                "ApproximateCreationDateTime": 1689131112,
+                "Keys": {
+                    "id": {
+                        "S": "7e7d5091-ecda-4b65-ad84-52b9a9b31f46"
+                    }
+                },
+                "NewImage": {
+                    "appuserID": {
+                        "S": "9b2bc3fc-bc59-4bf9-8205-753098d7a639"
+                    },
+                    "createdAt": {
+                        "S": "2023-07-12T03:05:11.835Z"
+                    },
+                    "metadata": {
+                        "M": {
+                            "size": {
+                                "N": "50415"
+                            },
+                            "type": {
+                                "S": "m4a"
+                            },
+                            "userName": {
+                                "S": "4f2e7891-b6f6-4270-987b-8337c6f86f4e"
+                            }
+                        }
+                    },
+                    "s3Key": {
+                        "S": "private/us-east-1:7ce737f6-1373-4b93-a4c2-cbf72b697202/audios/11Julio2023_2_1689131108132/11Julio2023_2.m4a"
+                    },
+                    "_lastChangedAt": {
+                        "N": "1689131111863"
+                    },
+                    "__typename": {
+                        "S": "Audio"
+                    },
+                    "id": {
+                        "S": "7e7d5091-ecda-4b65-ad84-52b9a9b31f46"
+                    },
+                    "title": {
+                        "S": "11Julio2023_2"
+                    },
+                    "_version": {
+                        "N": "1"
+                    },
+                    "expoFileSytemPath": {
+                        "S": "file:///data/user/0/host.exp.exponent/files/ExperienceData/%2540bryan.alfaro.pinto%252FmemorIAs/memorIAs/11Julio2023_2.m4a"
+                    },
+                    "updatedAt": {
+                        "S": "2023-07-12T03:05:11.835Z"
+                    }
+                },
+                "SequenceNumber": "242276500000000011324482483",
+                "SizeBytes": 576,
+                "StreamViewType": "NEW_AND_OLD_IMAGES"
+            },
+            "eventSourceARN": "arn:aws:dynamodb:us-east-1:425552117391:table/Audio-3zwr45ovl5cq3engfafynsxbm4-dev/stream/2023-05-22T04:32:54.774"
+        }
+    ]
+}

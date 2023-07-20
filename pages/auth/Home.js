@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { Amplify, Auth, Hub } from "aws-amplify";
+import { Auth, Hub } from "aws-amplify";
 import { CognitoHostedUIIdentityProvider } from "@aws-amplify/auth";
 import {
   View,
@@ -11,34 +11,9 @@ import {
   Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import * as WebBrowser from "expo-web-browser";
 import { DataStore } from "@aws-amplify/datastore";
 import { AppUser } from "../../src/models";
-
-import awsmobile from "../../src/aws-exports";
 import AppContext from "../AppContext";
-
-async function urlOpener(url, redirectUrl) {
-  const { type, url: newUrl } = await WebBrowser.openAuthSessionAsync(
-    url,
-    redirectUrl
-  );
-
-  if (type === "success" && Platform.OS === "ios") {
-    WebBrowser.dismissBrowser();
-    return Linking.openURL(newUrl);
-  }
-}
-
-const updatedConfig = {
-  ...awsmobile,
-  oauth: {
-    ...awsmobile.oauth,
-    urlOpener,
-  },
-};
-
-Amplify.configure(updatedConfig);
 
 const Home = () => {
   const [userData, setUserData] = useState(null);

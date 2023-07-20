@@ -12,26 +12,27 @@
       "AmplifyAppId": "d5bu556qepejs"
     },
     "categories": {
+      "function": {
+        "addNewUserToMemoriasGroup": {
+          "targetGroup": "memoriasUserPoolGroup",
+          "deploymentBucketName": "amplify-memorias-dev-03328-deployment",
+          "s3Key": "amplify-builds/addNewUserToMemoriasGroup-7838454e54457a474a4f-build.zip"
+        },
+        "S3Triggerad394d6f": {
+          "deploymentBucketName": "amplify-memorias-dev-03328-deployment",
+          "s3Key": "amplify-builds/S3Triggerad394d6f-486d6d4c334b45635834-build.zip"
+        },
+        "transcribeAudioFromUser": {
+          "deploymentBucketName": "amplify-memorias-dev-03328-deployment",
+          "s3Key": "amplify-builds/transcribeAudioFromUser-556b4b5662534b767266-build.zip"
+        }
+      },
       "auth": {
         "memorias9eb74f30": {},
         "userPoolGroups": {}
       },
       "storage": {
         "s3memoriasstorage0206a166": {}
-      },
-      "function": {
-        "S3Triggerad394d6f": {
-          "deploymentBucketName": "amplify-memorias-dev-03328-deployment",
-          "s3Key": "amplify-builds/S3Triggerad394d6f-486d6d4c334b45635834-build.zip"
-        },
-        "addNewUserToMemoriasGroup": {
-          "deploymentBucketName": "amplify-memorias-dev-03328-deployment",
-          "s3Key": "amplify-builds/addNewUserToMemoriasGroup-6666366258334e645a79-build.zip",
-          "targetGroup": "memoriasUserPoolGroup"
-        }
-      },
-      "api": {
-        "memorIAs": {}
       }
     }
   }

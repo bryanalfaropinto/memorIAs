@@ -101,6 +101,21 @@
       ],
       "providerPlugin": "awscloudformation",
       "service": "Lambda"
+    },
+    "transcribeAudioFromUser": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "GraphQLAPIIdOutput",
+            "GraphQLAPIEndpointOutput"
+          ],
+          "category": "api",
+          "resourceName": "memorIAs"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
     }
   },
   "parameters": {
@@ -143,6 +158,29 @@
           "resourceName": "addNewUserToMemoriasGroup"
         }
       ]
+    },
+    "AMPLIFY_function_transcribeAudioFromUser_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "transcribeAudioFromUser"
+        }
+      ]
+    },
+    "AMPLIFY_function_transcribeAudioFromUser_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "transcribeAudioFromUser"
+        }
+      ]
+    }
+  },
+  "predictions": {
+    "transcription086df646": {
+      "convertType": "transcription",
+      "providerPlugin": "awscloudformation",
+      "service": "Transcribe"
     }
   },
   "storage": {

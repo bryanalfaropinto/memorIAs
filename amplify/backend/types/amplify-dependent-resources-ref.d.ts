@@ -36,6 +36,19 @@ export type AmplifyDependentResourcesAttributes = {
       "LambdaExecutionRoleArn": "string",
       "Name": "string",
       "Region": "string"
+    },
+    "transcribeAudioFromUser": {
+      "Arn": "string",
+      "LambdaExecutionRole": "string",
+      "LambdaExecutionRoleArn": "string",
+      "Name": "string",
+      "Region": "string"
+    }
+  },
+  "predictions": {
+    "transcription086df646": {
+      "language": "string",
+      "region": "string"
     }
   },
   "storage": {

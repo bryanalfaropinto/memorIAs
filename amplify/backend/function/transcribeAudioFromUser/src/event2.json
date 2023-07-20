@@ -1,0 +1,68 @@
+{
+    "Records": [
+        {
+            "eventID": "fb2f3442c9c9b3b3dff97196f7bd3c8e",
+            "eventName": "INSERT",
+            "eventVersion": "1.1",
+            "eventSource": "aws:dynamodb",
+            "awsRegion": "us-east-1",
+            "dynamodb": {
+                "ApproximateCreationDateTime": 1688492599,
+                "Keys": {
+                    "id": {
+                        "S": "62255aed-cd5f-47ff-8fd6-77aa467126f4"
+                    }
+                },
+                "NewImage": {
+                    "appuserID": {
+                        "S": "9b2bc3fc-bc59-4bf9-8205-753098d7a639"
+                    },
+                    "createdAt": {
+                        "S": "2023-07-04T17:43:19.463Z"
+                    },
+                    "metadata": {
+                        "M": {
+                            "size": {
+                                "N": "43133"
+                            },
+                            "type": {
+                                "S": "m4a"
+                            },
+                            "userName": {
+                                "S": "4f2e7891-b6f6-4270-987b-8337c6f86f4e"
+                            }
+                        }
+                    },
+                    "s3Key": {
+                        "S": "private/us-east-1:7ce737f6-1373-4b93-a4c2-cbf72b697202/audios/4Julio2023_1.m4a"
+                    },
+                    "_lastChangedAt": {
+                        "N": "1688492599488"
+                    },
+                    "__typename": {
+                        "S": "Audio"
+                    },
+                    "id": {
+                        "S": "62255aed-cd5f-47ff-8fd6-77aa467126f4"
+                    },
+                    "title": {
+                        "S": "4Julio2023_1"
+                    },
+                    "_version": {
+                        "N": "1"
+                    },
+                    "expoFileSytemPath": {
+                        "S": "file:///data/user/0/host.exp.exponent/files/ExperienceData/%2540bryan.alfaro.pinto%252FmemorIAs/memorIAs/4Julio2023_1.m4a"
+                    },
+                    "updatedAt": {
+                        "S": "2023-07-04T17:43:19.463Z"
+                    }
+                },
+                "SequenceNumber": "207212700000000048175609228",
+                "SizeBytes": 545,
+                "StreamViewType": "NEW_AND_OLD_IMAGES"
+            },
+            "eventSourceARN": "arn:aws:dynamodb:us-east-1:425552117391:table/Audio-3zwr45ovl5cq3engfafynsxbm4-dev/stream/2023-05-22T04:32:54.774"
+        }
+    ]
+}

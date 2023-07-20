@@ -1,0 +1,140 @@
+{
+    "jobName": "TranscriptionJob-4Julio2023_1",
+    "accountId": "425552117391",
+    "results": {
+        "transcripts": [
+            {
+                "transcript": "pero así, pero que yo estoy bien. Un audio."
+            }
+        ],
+        "items": [
+            {
+                "start_time": "0.17",
+                "end_time": "0.46",
+                "alternatives": [
+                    {
+                        "confidence": "0.4922",
+                        "content": "pero"
+                    }
+                ],
+                "type": "pronunciation"
+            },
+            {
+                "start_time": "0.46",
+                "end_time": "1.12",
+                "alternatives": [
+                    {
+                        "confidence": "0.6864",
+                        "content": "así"
+                    }
+                ],
+                "type": "pronunciation"
+            },
+            {
+                "alternatives": [
+                    {
+                        "confidence": "0.0",
+                        "content": ","
+                    }
+                ],
+                "type": "punctuation"
+            },
+            {
+                "start_time": "1.15",
+                "end_time": "1.41",
+                "alternatives": [
+                    {
+                        "confidence": "0.8275",
+                        "content": "pero"
+                    }
+                ],
+                "type": "pronunciation"
+            },
+            {
+                "start_time": "1.41",
+                "end_time": "1.55",
+                "alternatives": [
+                    {
+                        "confidence": "0.9762",
+                        "content": "que"
+                    }
+                ],
+                "type": "pronunciation"
+            },
+            {
+                "start_time": "1.55",
+                "end_time": "1.66",
+                "alternatives": [
+                    {
+                        "confidence": "0.6513",
+                        "content": "yo"
+                    }
+                ],
+                "type": "pronunciation"
+            },
+            {
+                "start_time": "1.66",
+                "end_time": "1.92",
+                "alternatives": [
+                    {
+                        "confidence": "0.9087",
+                        "content": "estoy"
+                    }
+                ],
+                "type": "pronunciation"
+            },
+            {
+                "start_time": "1.92",
+                "end_time": "2.43",
+                "alternatives": [
+                    {
+                        "confidence": "1.0",
+                        "content": "bien"
+                    }
+                ],
+                "type": "pronunciation"
+            },
+            {
+                "alternatives": [
+                    {
+                        "confidence": "0.0",
+                        "content": "."
+                    }
+                ],
+                "type": "punctuation"
+            },
+            {
+                "start_time": "2.46",
+                "end_time": "2.8",
+                "alternatives": [
+                    {
+                        "confidence": "0.8985",
+                        "content": "Un"
+                    }
+                ],
+                "type": "pronunciation"
+            },
+            {
+                "start_time": "2.81",
+                "end_time": "3.29",
+                "alternatives": [
+                    {
+                        "confidence": "0.9486",
+                        "content": "audio"
+                    }
+                ],
+                "type": "pronunciation"
+            },
+            {
+                "alternatives": [
+                    {
+                        "confidence": "0.0",
+                        "content": "."
+                    }
+                ],
+                "type": "punctuation"
+            }
+        ]
+    },
+    "status": "COMPLETED"
+}

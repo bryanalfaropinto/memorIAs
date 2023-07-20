@@ -51,6 +51,7 @@ const AudioList = () => {
   const loadUserId = async () => {
     try {
       const userAuth = await Auth.currentAuthenticatedUser();
+      //console.log("userAuth: ", userAuth);
       let users = await DataStore.query(AppUser, (u) =>
         u.cognitoId.eq(userAuth.attributes.sub)
       );
@@ -107,13 +108,13 @@ const AudioList = () => {
         );
         if (!existingLocalAudioInfo.exists) {
           //download file from cloud storage to local expo file system
-          const credentials = await Auth.currentCredentials();
+          //const credentials = await Auth.currentCredentials();
           const s3Key = audioItemDB.key;
-          console.log("s3Key: ", s3Key);
+          //console.log("s3Key: ", s3Key);
           const responseUrl = await Storage.get(s3Key, {
             level: "private",
           });
-
+          //console.log("responseUrl: ", responseUrl);
           if (responseUrl) {
             const response = await fetch(responseUrl, {
               method: "GET",
@@ -127,9 +128,9 @@ const AudioList = () => {
               response.url,
               finalFileUri
             );
-            console.log("file downloaded and created in Uri: ", uri);
-            const downloadedAudioInfo = await FileSystem.getInfoAsync(uri);
-            console.log("downloadedAudioInfo: ", downloadedAudioInfo);
+            //console.log("file downloaded and created in Uri: ", uri);
+            //const downloadedAudioInfo = await FileSystem.getInfoAsync(uri);
+            //console.log("downloadedAudioInfo: ", downloadedAudioInfo);
           }
         }
         //set local file system path to metadata object
@@ -163,21 +164,26 @@ const AudioList = () => {
   async function playSound(filePath) {
     try {
       console.log("filePath to play: ", filePath);
-      const { sound, status } = await AudioExpo.Sound.createAsync({
+
+      const { sound } = await AudioExpo.Sound.createAsync({
         uri: filePath,
         headers: {
-          "Content-Type": "audio/m4a",
+          "Content-Type": "audio/mpeg",
         },
         overrideFileExtensionAndroid: "m4a",
+      }).catch((error) => {
+        console.log("Error occurred while creating sound: ", error);
       });
       //console.log("sound: ", sound);
+
       setCurrentSound(sound);
       await sound.playAsync();
       setIsPlaying(filePath);
 
-      sound.setOnPlaybackStatusUpdate((status) => {
+      sound.setOnPlaybackStatusUpdate(async (status) => {
         if (status.didJustFinish) {
           setIsPlaying(null);
+          await sound.unloadAsync();
         }
       });
     } catch (error) {
@@ -214,7 +220,10 @@ const AudioList = () => {
     try {
       console.log("deleting from cloud: ", id, key);
       //remove file from Storage
-      const return1 = await Storage.remove(key, { level: "private" });
+      const parts = key.split("/");
+      const reducedKey = parts.slice(2).join("/");
+      console.log("reducedKey: ", reducedKey);
+      const return1 = await Storage.remove(reducedKey, { level: "private" });
       console.log("return1: ", return1);
       //remove record from DB
       const return2 = await DataStore.delete(AudioModel, id);
