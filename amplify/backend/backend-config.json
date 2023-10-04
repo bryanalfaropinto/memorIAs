@@ -176,13 +176,7 @@
       ]
     }
   },
-  "predictions": {
-    "transcription086df646": {
-      "convertType": "transcription",
-      "providerPlugin": "awscloudformation",
-      "service": "Transcribe"
-    }
-  },
+  "predictions": {},
   "storage": {
     "s3memoriasstorage0206a166": {
       "dependsOn": [

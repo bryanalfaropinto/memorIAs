@@ -1,5 +1,39 @@
 {
-  "key1": "value1",
-  "key2": "value2",
-  "key3": "value3"
+  "Records": [
+      {
+          "eventVersion": "2.1",
+          "eventSource": "aws:s3",
+          "awsRegion": "us-east-1",
+          "eventTime": "2023-08-13T05:27:47.337Z",
+          "eventName": "ObjectCreated:Put",
+          "userIdentity": {
+              "principalId": "AWS:AIDAWGFHB72H4MNU7TZ5M"
+          },
+          "requestParameters": {
+              "sourceIPAddress": "10.0.44.22"
+          },
+          "responseElements": {
+              "x-amz-request-id": "WXVWPJJR3QZXM7AC",
+              "x-amz-id-2": "mOCQ47SaXhFGhg9g4AC2uV/jrIMTioKn7OFGUrjQqEi+g3RYiPsmyI5w5N31JsR7QWVaUZAJgJM1pL5TMEf27vPEYTjz7WoA"
+          },
+          "s3": {
+              "s3SchemaVersion": "1.0",
+              "configurationId": "9623c5b0-89e5-403b-8bba-2112f14d5d76",
+              "bucket": {
+                  "name": "memorias-storage-0206a16603328-dev",
+                  "ownerIdentity": {
+                      "principalId": "A24HVD7CZ6VOXA"
+                  },
+                  "arn": "arn:aws:s3:::memorias-storage-0206a16603328-dev"
+              },
+              "object": {
+                  "key": "transcripts/transcripts-4f2e7891-b6f6-4270-987b-8337c6f86f4e/TranscriptionJob_ccfc96fa-b8ba-46ac-8e17-638edfa2c752_sonido_prueba.json",
+                  "size": 4016,
+                  "eTag": "af532ac0de8ef61c711dd0f2579af2bb",
+                  "versionId": "rSGB6NoUdLolXARtlRRXh.XCv0k0mrrU",
+                  "sequencer": "0064D869D347CFBD22"
+              }
+          }
+      }
+  ]
 }

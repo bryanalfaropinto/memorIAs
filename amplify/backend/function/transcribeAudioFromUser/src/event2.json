@@ -1,16 +1,16 @@
 {
     "Records": [
         {
-            "eventID": "fb2f3442c9c9b3b3dff97196f7bd3c8e",
+            "eventID": "775144bbea1eff848005ce7724fc73fc",
             "eventName": "INSERT",
             "eventVersion": "1.1",
             "eventSource": "aws:dynamodb",
             "awsRegion": "us-east-1",
             "dynamodb": {
-                "ApproximateCreationDateTime": 1688492599,
+                "ApproximateCreationDateTime": 1691008292,
                 "Keys": {
                     "id": {
-                        "S": "62255aed-cd5f-47ff-8fd6-77aa467126f4"
+                        "S": "d2251865-6268-4814-a0f1-2499bcb03b47"
                     }
                 },
                 "NewImage": {
@@ -18,12 +18,12 @@
                         "S": "9b2bc3fc-bc59-4bf9-8205-753098d7a639"
                     },
                     "createdAt": {
-                        "S": "2023-07-04T17:43:19.463Z"
+                        "S": "2023-08-02T20:31:32.406Z"
                     },
                     "metadata": {
                         "M": {
                             "size": {
-                                "N": "43133"
+                                "N": "90625"
                             },
                             "type": {
                                 "S": "m4a"
@@ -34,32 +34,32 @@
                         }
                     },
                     "s3Key": {
-                        "S": "private/us-east-1:7ce737f6-1373-4b93-a4c2-cbf72b697202/audios/4Julio2023_1.m4a"
+                        "S": "private/us-east-1:7ce737f6-1373-4b93-a4c2-cbf72b697202/audios/pichifalsa_1691008288562/pichifalsa.m4a"
                     },
                     "_lastChangedAt": {
-                        "N": "1688492599488"
+                        "N": "1691008292436"
                     },
                     "__typename": {
                         "S": "Audio"
                     },
                     "id": {
-                        "S": "62255aed-cd5f-47ff-8fd6-77aa467126f4"
+                        "S": "d2251865-6268-4814-a0f1-2499bcb03b47"
                     },
                     "title": {
-                        "S": "4Julio2023_1"
+                        "S": "pichifalsa"
                     },
                     "_version": {
                         "N": "1"
                     },
                     "expoFileSytemPath": {
-                        "S": "file:///data/user/0/host.exp.exponent/files/ExperienceData/%2540bryan.alfaro.pinto%252FmemorIAs/memorIAs/4Julio2023_1.m4a"
+                        "S": "file:///data/user/0/host.exp.exponent/files/memorIAs/pichifalsa.m4a"
                     },
                     "updatedAt": {
-                        "S": "2023-07-04T17:43:19.463Z"
+                        "S": "2023-08-02T20:31:32.406Z"
                     }
                 },
-                "SequenceNumber": "207212700000000048175609228",
-                "SizeBytes": 545,
+                "SequenceNumber": "345490200000000012153152411",
+                "SizeBytes": 512,
                 "StreamViewType": "NEW_AND_OLD_IMAGES"
             },
             "eventSourceARN": "arn:aws:dynamodb:us-east-1:425552117391:table/Audio-3zwr45ovl5cq3engfafynsxbm4-dev/stream/2023-05-22T04:32:54.774"

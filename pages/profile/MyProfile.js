@@ -455,7 +455,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingHorizontal: 8,
     backgroundColor: "#fff",
-    verticalAlign: "middle",
   },
   input: {
     width: "61%",

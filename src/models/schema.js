@@ -143,6 +143,20 @@ export const schema = {
                     "isRequired": false,
                     "attributes": []
                 },
+                "transcribedAt": {
+                    "name": "transcribedAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "transcriptionKey": {
+                    "name": "transcriptionKey",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
                 "appuserID": {
                     "name": "appuserID",
                     "isArray": false,
@@ -229,5 +243,5 @@ export const schema = {
     "enums": {},
     "nonModels": {},
     "codegenVersion": "3.4.4",
-    "version": "83fc42abc53b213ebf421fb3a9f01452"
+    "version": "9e5b466d8122d9e92caa291593e1d820"
 };

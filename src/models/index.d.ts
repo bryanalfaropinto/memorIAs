@@ -52,6 +52,8 @@ type EagerAudio = {
   readonly s3Key?: string | null;
   readonly expoFileSytemPath?: string | null;
   readonly metadata?: string | null;
+  readonly transcribedAt?: string | null;
+  readonly transcriptionKey?: string | null;
   readonly appuserID: string;
   readonly AppUser?: AppUser | null;
   readonly createdAt?: string | null;
@@ -68,6 +70,8 @@ type LazyAudio = {
   readonly s3Key?: string | null;
   readonly expoFileSytemPath?: string | null;
   readonly metadata?: string | null;
+  readonly transcribedAt?: string | null;
+  readonly transcriptionKey?: string | null;
   readonly appuserID: string;
   readonly AppUser: AsyncItem<AppUser | undefined>;
   readonly createdAt?: string | null;
