@@ -18,7 +18,8 @@ import { AppUser, Audio as AudioModel } from "../../src/models";
 import AppContext from "../AppContext";
 
 const RecordAudio = () => {
-  const { audioFolder, setAudioAdded } = useContext(AppContext);
+  const { audioFolder, setIdAudioAdded } =
+    useContext(AppContext);
   const [isRecording, setIsRecording] = useState(false);
   const [recording, setRecording] = useState();
   const [fileUri, setFileUri] = useState();
@@ -129,7 +130,7 @@ const RecordAudio = () => {
           appuserID: userId,
         })
       );
-      console.log("New audio created: ", lazyAudio);
+      //console.log("New audio created: ", lazyAudio);
       const data = {
         AudioId: lazyAudio.id,
         Success: true,
@@ -145,32 +146,41 @@ const RecordAudio = () => {
     }
   };
 
+  function urlToBlob(url) {
+    return new Promise((resolve, reject) => {
+      var xhr = new XMLHttpRequest();
+      xhr.onerror = reject;
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          resolve(xhr.response);
+        }
+      };
+      xhr.open("GET", url);
+      xhr.responseType = "blob"; // convert type
+      xhr.send();
+    });
+  }
+
   const uploadAudioToCloud = async (fileUri, recordingTitle) => {
     try {
       let upload1Success = false;
       //code to put a file in s3 bucket
       const s3AudioFolder = "audios";
       const audioName = fileUri.split("/").pop();
-      //console.log("Audio name: ", audioName);
       const audioType = audioName.split(".").pop();
-      //console.log("Audio type: ", audioType);
-      const response = await fetch(fileUri, {
-        method: "GET",
-        headers: {
-          "Content-Type": "audio/mpeg",
-        },
-      });
-      //console.log("response when uploading to cloud: ", response);
-      const blob = await response.blob();
-      //console.log("Blob uploading: ", blob);
+      console.log("fileUri: ", fileUri);
+
       const timestamp = new Date().getTime().toString();
-      const audioSubFolder = `${audioName.slice(0, audioName.lastIndexOf("."))}_${timestamp}`;
+      const audioSubFolder = `${audioName
+        .slice(0, audioName.lastIndexOf("."))
+        .replace(/\s/g, "_")}_${timestamp}`;
       const s3FileName = `${s3AudioFolder}/${audioSubFolder}/${audioName}`;
       console.log("s3FileName: ", s3FileName);
+
+      const blob = await urlToBlob(fileUri);
       const data1 = await uploadAudioToStorage(s3FileName, blob);
       if (data1.Success) {
         upload1Success = true;
-        //console.log("S3 upload: ", data1);
       }
 
       let upload2Success = false;
@@ -188,9 +198,11 @@ const RecordAudio = () => {
       }
 
       if (upload1Success && upload2Success) {
-        return true;
+        //const items = await DataStore.query(AudioModel, (audio) => audio.id.eq(data2.AudioId));
+        //console.log("audio items: ", items);
+        return data2;
       } else {
-        return false;
+        return null;
       }
     } catch (error) {
       console.log("Error occurred while uploading audio to cloud: ", error);
@@ -213,16 +225,16 @@ const RecordAudio = () => {
 
       if (result) {
         Alert.alert("Sucess", "Audio saved successfully");
+        setModalVisible(false);
+        //setAudioAdded(true);
+        setIdAudioAdded(result.AudioId);
+        navigation.navigate("AudioList"); // Navega al componente AudioList
       } else {
         Alert.alert("Error", "Audio not saved, try again");
       }
     } catch (error) {
       console.log("Error occurred while saving sound: ", error);
     }
-
-    setModalVisible(false);
-    setAudioAdded(true);
-    navigation.navigate("AudioList"); // Navega al componente AudioList
   }
 
   return (

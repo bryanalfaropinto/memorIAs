@@ -45,12 +45,6 @@ export type AmplifyDependentResourcesAttributes = {
       "Region": "string"
     }
   },
-  "predictions": {
-    "transcription086df646": {
-      "language": "string",
-      "region": "string"
-    }
-  },
   "storage": {
     "s3memoriasstorage0206a166": {
       "BucketName": "string",

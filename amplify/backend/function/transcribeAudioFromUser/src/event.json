@@ -1,16 +1,16 @@
 {
     "Records": [
         {
-            "eventID": "bdcca02377b18ec90bad4ee325987766",
+            "eventID": "5129983760e6c4d98b18595f78d922b0",
             "eventName": "INSERT",
             "eventVersion": "1.1",
             "eventSource": "aws:dynamodb",
             "awsRegion": "us-east-1",
             "dynamodb": {
-                "ApproximateCreationDateTime": 1689131112,
+                "ApproximateCreationDateTime": 1691005382,
                 "Keys": {
                     "id": {
-                        "S": "7e7d5091-ecda-4b65-ad84-52b9a9b31f46"
+                        "S": "ccfc96fa-b8ba-46ac-8e17-638edfa2c752"
                     }
                 },
                 "NewImage": {
@@ -18,12 +18,12 @@
                         "S": "9b2bc3fc-bc59-4bf9-8205-753098d7a639"
                     },
                     "createdAt": {
-                        "S": "2023-07-12T03:05:11.835Z"
+                        "S": "2023-08-02T19:43:01.531Z"
                     },
                     "metadata": {
                         "M": {
                             "size": {
-                                "N": "50415"
+                                "N": "133719"
                             },
                             "type": {
                                 "S": "m4a"
@@ -34,32 +34,32 @@
                         }
                     },
                     "s3Key": {
-                        "S": "private/us-east-1:7ce737f6-1373-4b93-a4c2-cbf72b697202/audios/11Julio2023_2_1689131108132/11Julio2023_2.m4a"
+                        "S": "private/us-east-1:7ce737f6-1373-4b93-a4c2-cbf72b697202/audios/sonido_prueba_1691005378543/sonido prueba.m4a"
                     },
                     "_lastChangedAt": {
-                        "N": "1689131111863"
+                        "N": "1691005381556"
                     },
                     "__typename": {
                         "S": "Audio"
                     },
                     "id": {
-                        "S": "7e7d5091-ecda-4b65-ad84-52b9a9b31f46"
+                        "S": "ccfc96fa-b8ba-46ac-8e17-638edfa2c752"
                     },
                     "title": {
-                        "S": "11Julio2023_2"
+                        "S": "sonido prueba"
                     },
                     "_version": {
                         "N": "1"
                     },
                     "expoFileSytemPath": {
-                        "S": "file:///data/user/0/host.exp.exponent/files/ExperienceData/%2540bryan.alfaro.pinto%252FmemorIAs/memorIAs/11Julio2023_2.m4a"
+                        "S": "file:///data/user/0/host.exp.exponent/files/memorIAs/sonido prueba.m4a"
                     },
                     "updatedAt": {
-                        "S": "2023-07-12T03:05:11.835Z"
+                        "S": "2023-08-02T19:43:01.531Z"
                     }
                 },
-                "SequenceNumber": "242276500000000011324482483",
-                "SizeBytes": 576,
+                "SequenceNumber": "345623200000000014154427404",
+                "SizeBytes": 524,
                 "StreamViewType": "NEW_AND_OLD_IMAGES"
             },
             "eventSourceARN": "arn:aws:dynamodb:us-east-1:425552117391:table/Audio-3zwr45ovl5cq3engfafynsxbm4-dev/stream/2023-05-22T04:32:54.774"

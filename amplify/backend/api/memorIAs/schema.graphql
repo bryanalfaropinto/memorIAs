@@ -13,6 +13,8 @@ type Audio @model @auth(rules: [{allow: public}, {allow: private}]) {
   s3Key: String
   expoFileSytemPath: String
   metadata: AWSJSON
+  transcribedAt: AWSDateTime
+  transcriptionKey: String
   appuserID: ID! @index(name: "byAppUser")
   AppUser: AppUser @belongsTo(fields: ["appuserID"])
 }

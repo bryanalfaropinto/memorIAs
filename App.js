@@ -38,10 +38,10 @@ const App = () => {
   const [audioFolder, setAudioFolder] = useState(
     FileSystem.documentDirectory + "memorIAs/"
   );
+
+  const [idAudioAdded, setIdAudioAdded] = useState(null);
   const [audioAdded, setAudioAdded] = useState(false);
-  const [audioList, setAudioList] = useState([]);
   const [isInitialRegistration, setIsInitialRegistration] = useState(false);
-  const [userAudios, setUserAudios] = useState([]);
 
   const createAppFolder = async () => {
     try {
@@ -64,15 +64,13 @@ const App = () => {
     <AppContext.Provider
       value={{
         audioFolder,
-        audioList,
         audioAdded,
+        idAudioAdded,
         isInitialRegistration,
-        userAudios,
         setAudioFolder,
-        setAudioList,
         setAudioAdded,
+        setIdAudioAdded,
         setIsInitialRegistration,
-        setUserAudios,
       }}
     >
       <Navigation />

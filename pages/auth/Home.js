@@ -119,7 +119,7 @@ const Home = () => {
       setUserData(data);
 
       await DataStore.clear();
-      await DataStore.configure(); //syncExpressions can be added later when needed (Audios from User)
+      DataStore.configure(); //syncExpressions can be added later when needed (Audios from User)
       await DataStore.start();
     } catch (error) {
       console.log("Error event after signing in: ", error);
@@ -175,6 +175,21 @@ const Home = () => {
     setIsDataStoreReady(true);
   };
 
+  const handleTokenRefresh = async () => {
+    try {
+      //const cognitoUser = await Auth.currentAuthenticatedUser();
+      //renew expired token
+      const currentSession = await Auth.currentSession();
+      //console.log("currentSession: ", currentSession);
+      // cognitoUser.refreshSession(currentSession.refreshToken, (err, session) => {
+      //   console.log('session', err, session);
+      //   const { idToken, refreshToken, accessToken } = session;
+      // });
+    } catch (error) {
+      console.log("Error refreshing token: ", error);
+    }
+  }
+
   useEffect(() => {
     const unsubscribeAuth = Hub.listen(
       "auth",
@@ -210,6 +225,13 @@ const Home = () => {
             setIsWaitingVerificationCode(false);
             setPassword("");
             setVerificationCode("");
+            break;
+          case "tokenRefresh":
+            console.log("Token has expired ... refreshing token");
+            handleTokenRefresh();
+            break;
+          case "customState":
+            setCustomState(data);
             break;
         }
       }

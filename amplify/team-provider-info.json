@@ -20,11 +20,11 @@
         },
         "S3Triggerad394d6f": {
           "deploymentBucketName": "amplify-memorias-dev-03328-deployment",
-          "s3Key": "amplify-builds/S3Triggerad394d6f-486d6d4c334b45635834-build.zip"
+          "s3Key": "amplify-builds/S3Triggerad394d6f-487142353858314f6144-build.zip"
         },
         "transcribeAudioFromUser": {
           "deploymentBucketName": "amplify-memorias-dev-03328-deployment",
-          "s3Key": "amplify-builds/transcribeAudioFromUser-556b4b5662534b767266-build.zip"
+          "s3Key": "amplify-builds/transcribeAudioFromUser-676e3236635a57413270-build.zip"
         }
       },
       "auth": {
@@ -33,6 +33,9 @@
       },
       "storage": {
         "s3memoriasstorage0206a166": {}
+      },
+      "api": {
+        "memorIAs": {}
       }
     }
   }
